@@ -1,17 +1,3739 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<title>StaySync - Booking Management</title>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<style>
-body { font-family: Arial, sans-serif; margin: 20px; }
-h1 { color: #1e40af; }
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#1e40af">
+    <title>StaySync - Booking Management</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #1e40af;
+            --accent: #2563eb;
+            --bg: #f8fafc;
+            --surface: #ffffff;
+            --text: #0f172a;
+            --text-secondary: #475569;
+            --border: #e2e8f0;
+            --success: #16a34a;
+            --warning: #d97706;
+            --danger: #dc2626;
+            --overlay: rgba(0, 0, 0, 0.5);
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :root:not([data-theme="light"]) {
+                --primary: #3b82f6;
+                --accent: #60a5fa;
+                --bg: #0f172a;
+                --surface: #1e293b;
+                --text: #f1f5f9;
+                --text-secondary: #cbd5e1;
+                --border: #334155;
+                --overlay: rgba(0, 0, 0, 0.7);
+                --success: #22c55e;
+                --warning: #f59e0b;
+                --danger: #ef4444;
+            }
+        }
+
+        :root[data-theme="dark"] {
+            --primary: #3b82f6;
+            --accent: #60a5fa;
+            --bg: #0f172a;
+            --surface: #1e293b;
+            --text: #f1f5f9;
+            --text-secondary: #cbd5e1;
+            --border: #334155;
+            --overlay: rgba(0, 0, 0, 0.7);
+            --success: #22c55e;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+        }
+
+        html, body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            height: 100%;
+            overflow: hidden;
+        }
+
+        .app-container {
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* DESKTOP SIDEBAR */
+        @media (min-width: 768px) {
+            .app-container {
+                flex-direction: row;
+            }
+
+            .sidebar {
+                width: 280px;
+                background: var(--surface);
+                border-right: 1px solid var(--border);
+                padding: 20px;
+                overflow-y: auto;
+                display: flex !important;
+                flex-direction: column;
+                gap: 20px;
+            }
+
+            .sidebar-title {
+                font-size: 24px;
+                font-weight: 700;
+                color: var(--primary);
+            }
+
+            .nav-desktop {
+                display: flex;
+                flex-direction: column;
+                gap: 10px;
+            }
+
+            .nav-desktop button {
+                width: 100%;
+                padding: 12px;
+                background: none;
+                border: none;
+                color: var(--text-secondary);
+                font-size: 14px;
+                cursor: pointer;
+                border-radius: 8px;
+                display: flex;
+                align-items: center;
+                gap: 12px;
+                transition: all 150ms;
+            }
+
+            .nav-desktop button:hover {
+                background: var(--bg);
+                color: var(--text);
+            }
+
+            .nav-desktop button.active {
+                background: var(--primary);
+                color: white;
+            }
+
+            .nav-desktop svg {
+                width: 20px;
+                height: 20px;
+            }
+
+            .main-content {
+                flex: 1;
+                overflow-y: auto;
+                padding-bottom: 0;
+            }
+        }
+
+        /* MOBILE NAVIGATION */
+        .sidebar {
+            display: none;
+        }
+
+        @media (max-width: 767px) {
+            .main-content {
+                flex: 1;
+                overflow-y: auto;
+                padding-bottom: 70px;
+            }
+        }
+
+        .bottom-nav {
+            display: none;
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 70px;
+            background: var(--surface);
+            border-top: 1px solid var(--border);
+            display: flex;
+            justify-content: space-around;
+            align-items: stretch;
+            z-index: 100;
+        }
+
+        @media (max-width: 767px) {
+            .bottom-nav {
+                display: flex;
+            }
+        }
+
+        .bottom-nav button {
+            flex: 1;
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            font-size: 11px;
+            transition: all 150ms;
+            border-top: 3px solid transparent;
+        }
+
+        .bottom-nav button:hover {
+            color: var(--text);
+        }
+
+        .bottom-nav button.active {
+            color: var(--primary);
+            border-top-color: var(--primary);
+        }
+
+        .bottom-nav svg {
+            width: 24px;
+            height: 24px;
+        }
+
+        /* OFFLINE BANNER */
+        .offline-banner {
+            display: none;
+            background: var(--danger);
+            color: white;
+            padding: 12px;
+            text-align: center;
+            font-size: 13px;
+            gap: 8px;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .offline-banner.show {
+            display: flex;
+        }
+
+        .offline-banner svg {
+            width: 18px;
+            height: 18px;
+        }
+
+        /* PAGE STRUCTURE */
+        .page {
+            display: none;
+        }
+
+        .page.active {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .page-header {
+            background: var(--surface);
+            border-bottom: 1px solid var(--border);
+            padding: 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .page-header h1 {
+            font-size: 24px;
+            font-weight: 700;
+        }
+
+        .header-add-btn {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 10px 18px;
+            border-radius: 10px;
+            font-size: 15px;
+            font-weight: 600;
+            min-height: 44px;
+        }
+
+        .header-add-btn svg {
+            flex-shrink: 0;
+        }
+
+        .page-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 16px;
+        }
+
+        .page-content-large {
+            padding: 24px;
+        }
+
+        /* CARDS */
+        .card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 16px;
+        }
+
+        .card-compact {
+            padding: 12px;
+        }
+
+        .card-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 16px;
+            text-align: center;
+        }
+
+        .stat-card-value {
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--primary);
+            margin: 8px 0;
+        }
+
+        .stat-card-label {
+            font-size: 12px;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        /* BUTTONS */
+        button, .btn {
+            font-family: inherit;
+            font-size: 14px;
+            padding: 12px 16px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 150ms;
+            min-height: 48px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            font-weight: 600;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #1e3a8a;
+        }
+
+        .btn-primary:active {
+            transform: scale(0.98);
+        }
+
+        .btn-secondary {
+            background: var(--bg);
+            color: var(--text);
+            border: 1px solid var(--border);
+        }
+
+        .btn-secondary:hover {
+            background: var(--surface);
+        }
+
+        .btn-danger {
+            background: var(--danger);
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #b91c1c;
+        }
+
+        .btn-success {
+            background: var(--success);
+            color: white;
+        }
+
+        .btn-small {
+            padding: 8px 12px;
+            font-size: 12px;
+            min-height: 36px;
+        }
+
+        .btn-icon {
+            padding: 8px;
+            min-height: 40px;
+            width: 40px;
+            justify-content: center;
+        }
+
+        .btn-icon svg {
+            width: 20px;
+            height: 20px;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 8px;
+            margin-top: 12px;
+        }
+
+        .button-group button {
+            flex: 1;
+        }
+
+        /* FORMS */
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        label {
+            display: block;
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 6px;
+            color: var(--text);
+        }
+
+        input, textarea, select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-family: inherit;
+            font-size: 14px;
+            background: var(--surface);
+            color: var(--text);
+            transition: border 150ms;
+        }
+
+        input:focus, textarea:focus, select:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        @media (max-width: 480px) {
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .form-group.full {
+            grid-column: 1 / -1;
+        }
+
+        /* MODAL */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: var(--overlay);
+            z-index: 1000;
+            animation: fadeIn 150ms;
+        }
+
+        .modal-overlay.show {
+            display: flex;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .modal {
+            background: var(--surface);
+            border-radius: 16px 16px 0 0;
+            padding: 24px 16px 16px;
+            width: 100%;
+            max-width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+            animation: slideUp 300ms ease-out;
+            margin-top: auto;
+        }
+
+        @keyframes slideUp {
+            from { transform: translateY(100%); }
+            to { transform: translateY(0); }
+        }
+
+        @media (min-width: 768px) {
+            .modal-overlay {
+                align-items: center;
+                justify-content: center;
+            }
+
+            .modal {
+                border-radius: 16px;
+                width: 90%;
+                max-width: 500px;
+                max-height: 90vh;
+                margin-top: 0;
+            }
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .modal-header h2 {
+            font-size: 20px;
+            font-weight: 700;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            width: 32px;
+            height: 32px;
+            padding: 0;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-close:hover {
+            color: var(--text);
+        }
+
+        /* SEARCH & FILTER */
+        .search-bar {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+
+        .search-bar input {
+            flex: 1;
+            padding-left: 36px;
+            background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.35-4.35"></path></svg>');
+            background-repeat: no-repeat;
+            background-position: 10px center;
+            background-size: 20px;
+        }
+
+        .filter-buttons {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 16px;
+            overflow-x: auto;
+            padding-bottom: 8px;
+        }
+
+        .filter-btn {
+            padding: 8px 12px;
+            border: 1px solid var(--border);
+            background: none;
+            border-radius: 20px;
+            font-size: 12px;
+            white-space: nowrap;
+            transition: all 150ms;
+            min-height: auto;
+        }
+
+        .filter-btn.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        /* LIST ITEMS */
+        .list-item {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            transition: all 150ms;
+        }
+
+        .list-item:active {
+            background: var(--bg);
+        }
+
+        .list-item-content {
+            flex: 1;
+        }
+
+        .list-item-title {
+            font-weight: 600;
+            font-size: 14px;
+            margin-bottom: 4px;
+        }
+
+        .list-item-subtitle {
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        .list-item-badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 10px;
+            font-weight: 600;
+            text-transform: uppercase;
+            margin-top: 4px;
+        }
+
+        .badge-active {
+            background: rgba(22, 163, 74, 0.2);
+            color: var(--success);
+        }
+
+        .badge-inactive {
+            background: rgba(100, 116, 139, 0.2);
+            color: var(--text-secondary);
+        }
+
+        .badge-maintenance {
+            background: rgba(217, 119, 6, 0.2);
+            color: var(--warning);
+        }
+
+        .badge-confirmed {
+            background: rgba(22, 163, 74, 0.2);
+            color: var(--success);
+        }
+
+        .badge-cancelled {
+            background: rgba(220, 38, 38, 0.2);
+            color: var(--danger);
+        }
+
+        /* CALENDAR */
+        .calendar-controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+
+        .calendar-month {
+            font-weight: 700;
+            font-size: 16px;
+        }
+
+        .calendar-view-toggle {
+            display: flex;
+            gap: 4px;
+            background: var(--bg);
+            border-radius: 8px;
+            padding: 4px;
+        }
+
+        .calendar-view-toggle button {
+            padding: 6px 12px;
+            font-size: 12px;
+            min-height: 32px;
+            border: none;
+            background: none;
+            color: var(--text-secondary);
+        }
+
+        .calendar-view-toggle button.active {
+            background: var(--surface);
+            color: var(--primary);
+        }
+
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 2px;
+            margin-bottom: 16px;
+        }
+
+        .calendar-day-header {
+            text-align: center;
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            padding: 8px 0;
+            text-transform: uppercase;
+        }
+
+        .calendar-day {
+            aspect-ratio: 1;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 6px;
+            font-size: 12px;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+            background: var(--surface);
+            transition: all 150ms;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .calendar-day:active {
+            background: var(--bg);
+        }
+
+        .calendar-day.today {
+            border-color: var(--primary);
+            border-width: 2px;
+            font-weight: 700;
+        }
+
+        .calendar-day.other-month {
+            color: var(--text-secondary);
+            background: var(--bg);
+        }
+
+        .calendar-day-number {
+            font-weight: 600;
+            margin-bottom: 2px;
+        }
+
+        .calendar-booking-bar {
+            height: 3px;
+            border-radius: 2px;
+            margin-top: 2px;
+            font-size: 8px;
+        }
+
+        .calendar-day-bookings {
+            display: flex;
+            flex-direction: column;
+            gap: 1px;
+            flex: 1;
+        }
+
+        .booking-bar {
+            height: 4px;
+            border-radius: 2px;
+        }
+
+        /* PROGRESS BAR */
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: var(--bg);
+            border-radius: 4px;
+            overflow: hidden;
+            margin: 8px 0;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: var(--primary);
+            border-radius: 4px;
+            transition: width 300ms ease;
+        }
+
+        /* ACTIVITY FEED */
+        .activity-item {
+            display: flex;
+            gap: 12px;
+            padding: 12px 0;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .activity-item:last-child {
+            border-bottom: none;
+        }
+
+        .activity-time {
+            font-size: 11px;
+            color: var(--text-secondary);
+            white-space: nowrap;
+        }
+
+        .activity-text {
+            font-size: 13px;
+            flex: 1;
+        }
+
+        /* FINANCIAL BREAKDOWN */
+        .financial-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            font-size: 13px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .financial-row.total {
+            font-weight: 700;
+            font-size: 14px;
+            border-bottom: 2px solid var(--border);
+            padding: 12px 0;
+        }
+
+        .financial-row.label {
+            color: var(--text-secondary);
+        }
+
+        .currency {
+            font-weight: 600;
+        }
+
+        /* TABS */
+        .tab-buttons {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 16px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .tab-button {
+            padding: 12px 16px;
+            background: none;
+            border: none;
+            border-bottom: 2px solid transparent;
+            color: var(--text-secondary);
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            margin-bottom: -1px;
+        }
+
+        .tab-button.active {
+            color: var(--primary);
+            border-bottom-color: var(--primary);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* EMPTY STATE */
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--text-secondary);
+        }
+
+        .empty-state-icon {
+            width: 48px;
+            height: 48px;
+            margin: 0 auto 16px;
+            opacity: 0.5;
+        }
+
+        .empty-state h3 {
+            font-size: 16px;
+            margin-bottom: 8px;
+            color: var(--text);
+        }
+
+        /* ALERT */
+        .alert {
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 16px;
+            display: flex;
+            gap: 12px;
+            align-items: flex-start;
+            font-size: 13px;
+        }
+
+        .alert svg {
+            width: 20px;
+            height: 20px;
+            flex-shrink: 0;
+            margin-top: 2px;
+        }
+
+        .alert-danger {
+            background: rgba(220, 38, 38, 0.1);
+            color: var(--danger);
+            border: 1px solid rgba(220, 38, 38, 0.2);
+        }
+
+        .alert-warning {
+            background: rgba(217, 119, 6, 0.1);
+            color: var(--warning);
+            border: 1px solid rgba(217, 119, 6, 0.2);
+        }
+
+        .alert-success {
+            background: rgba(22, 163, 74, 0.1);
+            color: var(--success);
+            border: 1px solid rgba(22, 163, 74, 0.2);
+        }
+
+        /* SPACING UTILITIES */
+        .mt-20 { margin-top: 20px; }
+        .mb-20 { margin-bottom: 20px; }
+        .mt-12 { margin-top: 12px; }
+        .mb-12 { margin-bottom: 12px; }
+        .gap-8 { gap: 8px; }
+
+        /* RESPONSIVE */
+        @media (max-width: 480px) {
+            .card-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+
+        /* FLOATING ACTION BUTTON (FAB) */
+        .fab {
+            position: fixed;
+            bottom: 88px;
+            right: 16px;
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            background: var(--accent);
+            color: white;
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            z-index: 50;
+            transition: all 150ms;
+            font-weight: 600;
+        }
+
+        .fab:active {
+            transform: scale(0.95);
+        }
+
+        .fab svg {
+            width: 24px;
+            height: 24px;
+        }
+
+        @media (min-width: 768px) {
+            .fab {
+                display: none;
+            }
+        }
+
+        @media (max-width: 767px) {
+            .fab {
+                bottom: 88px;
+            }
+        }
+
+        /* SUCCESS BANNER */
+        .success-banner {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: var(--success);
+            color: white;
+            padding: 16px;
+            z-index: 2000;
+            animation: slideDown 300ms ease-out;
+            align-items: center;
+            gap: 12px;
+            justify-content: center;
+            text-align: center;
+        }
+
+        .success-banner.show {
+            display: flex;
+        }
+
+        .success-banner svg {
+            width: 24px;
+            height: 24px;
+            flex-shrink: 0;
+        }
+
+        @keyframes slideDown {
+            from { transform: translateY(-100%); }
+            to { transform: translateY(0); }
+        }
+
+        /* INSTRUCTION BANNER */
+        .instruction-banner {
+            background: rgba(59, 130, 246, 0.1);
+            border: 1px solid rgba(59, 130, 246, 0.2);
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 12px;
+            font-size: 13px;
+            color: var(--text);
+        }
+
+        .instruction-banner.hidden {
+            display: none;
+        }
+
+        .instruction-banner-text {
+            flex: 1;
+            line-height: 1.5;
+        }
+
+        .instruction-banner-buttons {
+            display: flex;
+            gap: 8px;
+            flex-shrink: 0;
+        }
+
+        .instruction-banner button {
+            padding: 6px 12px;
+            font-size: 12px;
+            min-height: 32px;
+        }
+
+        /* IMAGE PREVIEW */
+        .image-preview {
+            width: 100%;
+            height: 150px;
+            border: 2px dashed var(--border);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--bg);
+            margin-bottom: 12px;
+            overflow: hidden;
+        }
+
+        .image-preview img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .image-preview-placeholder {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            color: var(--text-secondary);
+        }
+
+        .image-preview-placeholder svg {
+            width: 40px;
+            height: 40px;
+            opacity: 0.5;
+        }
+
+        /* CHECKBOX LIST */
+        .checkbox-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 8px;
+            border-radius: 6px;
+            border: 1px solid var(--border);
+            background: var(--surface);
+            cursor: pointer;
+            transition: all 150ms;
+        }
+
+        .checkbox-item:hover {
+            background: var(--bg);
+        }
+
+        .checkbox-item input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            min-width: 20px;
+            cursor: pointer;
+        }
+
+        .checkbox-item-label {
+            flex: 1;
+            cursor: pointer;
+        }
+
+        .checkbox-item-label .item-title {
+            font-weight: 600;
+            font-size: 14px;
+            display: block;
+            margin-bottom: 2px;
+        }
+
+        .checkbox-item-label .item-subtitle {
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        /* WHATSAPP BUTTON */
+        .btn-whatsapp {
+            background: #25d366;
+            color: white;
+            display: inline-flex;
+            gap: 6px;
+        }
+
+        .btn-whatsapp:hover {
+            background: #1faa50;
+        }
+
+        /* TEMPLATE PREVIEW */
+        .template-preview {
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 16px;
+            margin: 16px 0;
+            font-size: 13px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .template-preview-subject {
+            font-weight: 600;
+            margin-bottom: 8px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .template-preview-body {
+            line-height: 1.6;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+
+        /* API STATUS */
+        .api-status {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px;
+            border-radius: 8px;
+            background: var(--bg);
+            font-size: 13px;
+        }
+
+        .api-status.configured {
+            background: rgba(22, 163, 74, 0.1);
+            color: var(--success);
+        }
+
+        .api-status.not-configured {
+            background: rgba(220, 38, 38, 0.1);
+            color: var(--danger);
+        }
+
+        .api-status svg {
+            width: 20px;
+            height: 20px;
+            flex-shrink: 0;
+        }
+
+        /* MESSAGE HISTORY */
+        .message-item {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 8px;
+            font-size: 13px;
+        }
+
+        .message-item-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .message-item-recipient {
+            font-weight: 600;
+        }
+
+        .message-item-status {
+            font-size: 11px;
+            padding: 2px 8px;
+            border-radius: 4px;
+            background: var(--bg);
+        }
+
+        .message-item-status.sent {
+            background: rgba(22, 163, 74, 0.1);
+            color: var(--success);
+        }
+
+        .message-item-status.failed {
+            background: rgba(220, 38, 38, 0.1);
+            color: var(--danger);
+        }
+
+        .message-item-status.pending {
+            background: rgba(217, 119, 6, 0.1);
+            color: var(--warning);
+        }
+
+        .message-item-subject {
+            font-weight: 500;
+            margin-bottom: 4px;
+        }
+
+        .message-item-date {
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        /* ACCESSIBILITY */
+        @media (prefers-reduced-motion: reduce) {
+            * {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+            }
+        }
+    </style>
 </head>
 <body>
-<h1>StaySync - Booking Management Application</h1>
-<p>This is the StaySync booking management application for managing property bookings and guest information.</p>
-<p>Features: Booking management, Guest tracking, Property management, Theme support</p>
+    <div class="offline-banner" id="offlineBanner">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="1"></circle><path d="M12 8v-2"></path><path d="M4.22 4.22a8 8 0 1 0 11.56 0"></path></svg>
+        <span>You're offline. Changes will sync when online.</span>
+
+    <div class="success-banner" id="successBanner">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M20.854 5.354a1 1 0 0 0-1.414-1.414l-8.485 8.485-3.889-3.889a1 1 0 0 0-1.414 1.414l4.596 4.596a1 1 0 0 0 1.414 0l9.192-9.192z"/></svg>
+        <span id="successBannerText">Account created successfully! You can now log in.</span>
+    </div>
+    </div>
+
+    <div class="app-container">
+        <!-- DESKTOP SIDEBAR -->
+        <div class="sidebar" id="sidebar">
+            <div class="sidebar-title">StaySync</div>
+            <nav class="nav-desktop" id="navDesktop">
+                <button data-page="dashboard" class="active">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+                    Dashboard
+                </button>
+                <button data-page="calendar">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+                    Calendar
+                </button>
+                <button data-page="properties">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+                    Properties
+                </button>
+                <button data-page="landlords">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+                    Landlords
+                </button>
+                <button data-page="settings">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M12 1v6m0 6v6M4.22 4.22l4.24 4.24m6.08 0l4.24-4.24M1 12h6m6 0h6m-1.78 7.78l-4.24-4.24m-6.08 0l-4.24 4.24"></path></svg>
+                    Settings
+                </button>
+            </nav>
+        </div>
+
+        <!-- MAIN CONTENT -->
+        <div class="main-content" id="mainContent">
+            <!-- DASHBOARD PAGE -->
+            <div id="dashboard" class="page active">
+                <div class="page-header">
+                    <h1>Dashboard</h1>
+                </div>
+                <div class="page-content">
+                    <!-- TODAY'S ACTIVITY -->
+                    <div class="instruction-banner" id="dashboardInstruction">
+                        <div class="instruction-banner-text">Welcome to StaySync! This is your command center. You'll see today's check-ins/outs, upcoming bookings, and key stats. Start by adding your properties and landlords using the tabs below.</div>
+                        <div class="instruction-banner-buttons">
+                            <button class="btn-small" onclick="app.dismissInstruction('dashboard')">Got it</button>
+                            <button class="btn-icon btn-small" onclick="app.showInstruction('dashboard')">?</button>
+                        </div>
+                    </div>
+                    
+                    <div class="card">
+                        <div style="font-weight: 600; margin-bottom: 12px;">Today's Activity</div>
+                        <div id="todayActivity" style="font-size: 13px; color: var(--text-secondary);">No activity today</div>
+                    </div>
+
+                    <!-- STATS CARDS -->
+                    <div class="card-grid" id="statsGrid">
+                        <div class="stat-card">
+                            <div class="stat-card-label">Properties</div>
+                            <div class="stat-card-value" id="statProperties">0</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-card-label">Landlords</div>
+                            <div class="stat-card-value" id="statLandlords">0</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-card-label">This Month</div>
+                            <div class="stat-card-value" id="statBookings">0</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-card-label">Revenue</div>
+                            <div class="stat-card-value" id="statRevenue">0</div>
+                        </div>
+                    </div>
+
+                    <!-- OCCUPANCY RATE -->
+                    <div class="card">
+                        <div style="font-weight: 600; margin-bottom: 8px;">Occupancy Rate (This Month)</div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="occupancyFill" style="width: 0%"></div>
+                        </div>
+                        <div style="font-size: 12px; color: var(--text-secondary); text-align: right;" id="occupancyLabel">0%</div>
+                    </div>
+
+                    <!-- UPCOMING BOOKINGS -->
+                    <div class="card">
+                        <div style="font-weight: 600; margin-bottom: 12px;">Upcoming Bookings (Next 7 Days)</div>
+                        <div id="upcomingBookings" style="font-size: 13px; color: var(--text-secondary);">No upcoming bookings</div>
+                    </div>
+
+                    <!-- RECENT ACTIVITY -->
+                    <div class="card">
+                        <div style="font-weight: 600; margin-bottom: 12px;">Recent Activity</div>
+                        <div id="recentActivity" style="font-size: 13px; color: var(--text-secondary);">No recent activity</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CALENDAR PAGE -->
+            <div id="calendar" class="page">
+                <div class="page-header">
+                    <h1>Calendar</h1>
+                </div>
+                <div class="page-content">
+                    <div class="instruction-banner" id="calendarInstruction">
+                        <div class="instruction-banner-text">Tap any date to see bookings or create a new one. Colored bars represent different properties. Use the filter to view a specific property. Swipe left/right to change months.</div>
+                        <div class="instruction-banner-buttons">
+                            <button class="btn-small" onclick="app.dismissInstruction('calendar')">Got it</button>
+                            <button class="btn-icon btn-small" onclick="app.showInstruction('calendar')">?</button>
+                        </div>
+                    </div>
+                    
+                    <div class="calendar-controls">
+                        <button class="btn-icon" id="prevMonth">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"></polyline></svg>
+                        </button>
+                        <div class="calendar-month" id="calendarMonth">Month</div>
+                        <button class="btn-icon" id="nextMonth">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                        </button>
+                    </div>
+
+                    <div class="search-bar">
+                        <select id="propertyFilterSelect" style="max-width: 150px;">
+                            <option value="">All Properties</option>
+                        </select>
+                        <button class="btn-primary" id="addBookingBtn" style="margin-left: auto;">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                            Add Booking
+                        </button>
+                    </div>
+
+                    <div class="calendar-grid" id="calendarGrid">
+                        <!-- Generated by JS -->
+                    </div>
+
+                    <div id="calendarBookingsList" style="margin-top: 20px;">
+                        <!-- Selected date bookings shown here -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- PROPERTIES PAGE -->
+            <div id="properties" class="page">
+                <div class="page-header">
+                    <h1>Properties</h1>
+                    <button class="btn-primary header-add-btn" id="addPropertyBtn" title="Add Property">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                        <span>Add</span>
+                    </button>
+                </div>
+                <div class="page-content">
+                    <div class="instruction-banner" id="propertiesInstruction">
+                        <div class="instruction-banner-text">Add all the properties you manage here. Each property can be assigned to one or more landlords who will receive booking notifications. Tap the + button to add your first property.</div>
+                        <div class="instruction-banner-buttons">
+                            <button class="btn-small" onclick="app.dismissInstruction('properties')">Got it</button>
+                            <button class="btn-icon btn-small" onclick="app.showInstruction('properties')">?</button>
+                        </div>
+                    </div>
+                    
+                    <div class="search-bar">
+                        <input type="text" id="propertySearch" placeholder="Search properties...">
+                    </div>
+                    <div class="filter-buttons">
+                        <button class="filter-btn active" data-filter="all">All</button>
+                        <button class="filter-btn" data-filter="active">Active</button>
+                        <button class="filter-btn" data-filter="inactive">Inactive</button>
+                        <button class="filter-btn" data-filter="maintenance">Maintenance</button>
+                    </div>
+                    <div id="propertiesList">
+                        <!-- Properties rendered here -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- LANDLORDS PAGE -->
+            <div id="landlords" class="page">
+                <div class="page-header">
+                    <h1>Landlords</h1>
+                    <button class="btn-primary header-add-btn" id="addLandlordBtn" title="Add Landlord">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                        <span>Add</span>
+                    </button>
+                </div>
+                <div class="page-content">
+                    <div class="instruction-banner" id="landlordInstruction">
+                        <div class="instruction-banner-text">Add the property owners you work with. Each landlord needs a name and email address for notifications. Their payout percentage determines how much of each booking's revenue goes to them.</div>
+                        <div class="instruction-banner-buttons">
+                            <button class="btn-small" onclick="app.dismissInstruction('landlords')">Got it</button>
+                            <button class="btn-icon btn-small" onclick="app.showInstruction('landlords')">?</button>
+                        </div>
+                    </div>
+                    
+                    <div class="search-bar">
+                        <input type="text" id="landlordSearch" placeholder="Search landlords...">
+                    </div>
+                    <div id="landlordsList">
+                        <!-- Landlords rendered here -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- SETTINGS PAGE -->
+            <div id="settings" class="page">
+                <div class="page-header">
+                    <h1>Settings</h1>
+                </div>
+                <div class="page-content">
+                    <div class="instruction-banner" id="settingsInstruction">
+                        <div class="instruction-banner-text">Configure your profile, email notifications (Resend API), WhatsApp messaging, default check-in/out times, and currency. You can also export/import your data for backup.</div>
+                        <div class="instruction-banner-buttons">
+                            <button class="btn-small" onclick="app.dismissInstruction('settings')">Got it</button>
+                            <button class="btn-icon btn-small" onclick="app.showInstruction('settings')">?</button>
+                        </div>
+                    </div>
+                    
+                    <div class="tab-buttons">
+                        <button class="tab-button active" data-tab="profile">Profile</button>
+                        <button class="tab-button" data-tab="email">Email</button>
+                        <button class="tab-button" data-tab="general">General</button>
+                        <button class="tab-button" data-tab="data">Data</button>
+                    </div>
+
+                    <!-- PROFILE TAB -->
+                    <div id="profileTab" class="tab-content active">
+                        <div class="card">
+                            <form id="profileForm">
+                                <div class="form-group">
+                                    <label>Manager Name</label>
+                                    <input type="text" id="managerName" required>
+                                </div>
+                                <div class="form-group">
+                                    <label>Email</label>
+                                    <input type="email" id="managerEmail" required>
+                                </div>
+                                <div class="form-group">
+                                    <label>Phone</label>
+                                    <input type="tel" id="managerPhone">
+                                </div>
+                                <button type="submit" class="btn-primary" style="width: 100%;">Save Profile</button>
+                            </form>
+                        </div>
+                    </div>
+
+                    <!-- EMAIL TAB -->
+                    <div id="emailTab" class="tab-content">
+                        <div class="card">
+                            <h3 style="font-weight: 600; margin-bottom: 12px;">Resend Email API Setup</h3>
+                            
+                            <div style="margin-bottom: 16px; font-size: 13px; line-height: 1.6;">
+                                <div style="margin-bottom: 12px;"><strong>Step 1:</strong> Go to <a href="https://resend.com" target="_blank" style="color: var(--accent);">resend.com</a> and create a free account</div>
+                                <div style="margin-bottom: 12px;"><strong>Step 2:</strong> Create an API key in your Resend dashboard</div>
+                                <div style="margin-bottom: 12px;"><strong>Step 3:</strong> Paste your API key below</div>
+                            </div>
+
+                            <form id="emailForm">
+                                <div id="apiStatusContainer" style="margin-bottom: 16px;">
+                                    <!-- Status indicator populated by JS -->
+                                </div>
+
+                                <div class="form-group">
+                                    <label>Resend API Key</label>
+                                    <input type="password" id="resendApiKey" placeholder="re_...">
+                                    <div style="font-size: 11px; color: var(--text-secondary); margin-top: 4px;">Leave blank to use mailto: fallback</div>
+                                </div>
+                                <div class="form-group">
+                                    <label>From Email Address</label>
+                                    <input type="email" id="fromEmail" placeholder="noreply@example.com">
+                                </div>
+                                <div class="form-group">
+                                    <label>Email Signature</label>
+                                    <textarea id="emailSignature" placeholder="Best regards, &#10;Management Team"></textarea>
+                                </div>
+                                <button type="button" class="btn-secondary" id="testEmailBtn" style="width: 100%; margin-bottom: 12px;">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22 6 12 13 2 6"></polyline></svg>
+                                    Send Test Email
+                                </button>
+                                <button type="submit" class="btn-primary" style="width: 100%;">Save Email Settings</button>
+                            </form>
+                        </div>
+
+                        <div class="card" style="margin-top: 20px;">
+                            <h3 style="font-weight: 600; margin-bottom: 12px;">WhatsApp Notifications</h3>
+                            <div class="form-group">
+                                <label style="display: flex; align-items: center; gap: 8px; margin-bottom: 0; cursor: pointer;">
+                                    <input type="checkbox" id="whatsappEnabled">
+                                    <span>Enable WhatsApp notifications for bookings</span>
+                                </label>
+                            </div>
+                            <div style="font-size: 12px; color: var(--text-secondary); margin-top: 8px;">
+                                When enabled, you'll see a "Send via WhatsApp" button on booking notifications. Your landlords' phone numbers from their profiles will be used.
+                            </div>
+                        </div>
+                    </div>
+                    <!-- GENERAL TAB -->
+                    <div id="generalTab" class="tab-content">
+                        <div class="card">
+                            <form id="generalForm">
+                                <div class="form-group">
+                                    <label>Default Check-in Time</label>
+                                    <input type="time" id="defaultCheckIn" value="14:00">
+                                </div>
+                                <div class="form-group">
+                                    <label>Default Check-out Time</label>
+                                    <input type="time" id="defaultCheckOut" value="11:00">
+                                </div>
+                                <div class="form-group">
+                                    <label>Currency</label>
+                                    <select id="currencySelect">
+                                        <option value="NGN">Nigerian Naira (₦)</option>
+                                        <option value="USD">US Dollar ($)</option>
+                                        <option value="EUR">Euro (€)</option>
+                                        <option value="GBP">British Pound (£)</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label>Theme</label>
+                                    <div class="filter-buttons">
+                                        <button type="button" class="filter-btn active" data-theme="auto">Auto</button>
+                                        <button type="button" class="filter-btn" data-theme="light">Light</button>
+                                        <button type="button" class="filter-btn" data-theme="dark">Dark</button>
+                                    </div>
+                                </div>
+                                <button type="submit" class="btn-primary" style="width: 100%;">Save General Settings</button>
+                            </form>
+                        </div>
+                    </div>
+
+                    <!-- DATA TAB -->
+                    <div id="dataTab" class="tab-content">
+                        <div class="card">
+                            <div style="margin-bottom: 20px;">
+                                <h3 style="font-weight: 600; margin-bottom: 8px;">Export Data</h3>
+                                <p style="font-size: 13px; color: var(--text-secondary); margin-bottom: 12px;">Download all your data as a JSON file for backup or migration.</p>
+                                <button class="btn-primary" id="exportDataBtn" style="width: 100%;">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                                    Export Data
+                                </button>
+                            </div>
+
+                            <div style="margin-bottom: 20px; padding: 12px; background: var(--bg); border-radius: 8px;">
+                                <h3 style="font-weight: 600; margin-bottom: 8px;">Import Data</h3>
+                                <p style="font-size: 13px; color: var(--text-secondary); margin-bottom: 12px;">Import data from a previous JSON export.</p>
+                                <input type="file" id="importDataFile" accept=".json" style="margin-bottom: 12px;">
+                                <button class="btn-secondary" id="importDataBtn" style="width: 100%;">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+                                    Import Data
+                                </button>
+                            </div>
+
+                            <div style="padding: 12px; background: rgba(220, 38, 38, 0.05); border-radius: 8px; border: 1px solid rgba(220, 38, 38, 0.2);">
+                                <h3 style="font-weight: 600; margin-bottom: 8px; color: var(--danger);">Danger Zone</h3>
+                                <p style="font-size: 13px; color: var(--text-secondary); margin-bottom: 12px;">Permanently delete all data. This cannot be undone.</p>
+                                <button class="btn-danger" id="clearDataBtn" style="width: 100%;">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                                    Clear All Data
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="card" style="margin-top: 20px;">
+                            <h3 style="font-weight: 600; margin-bottom: 12px;">About StaySync</h3>
+                            <div style="font-size: 13px; color: var(--text-secondary);">
+                                <p style="margin-bottom: 8px;">Version 1.0.0</p>
+                                <p style="margin-bottom: 8px;">A production-quality Airbnb booking management platform optimized for mobile and offline usage.</p>
+                                <p>Built for property managers in Nigeria and beyond.</p>
+                            </div>
+                        </div>
+
+                        <button class="btn-secondary" id="logoutBtn" style="width: 100%; margin-top: 20px;">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+                            Logout
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+
+            <!-- MESSAGES PAGE -->
+            <div id="messages" class="page">
+                <div class="page-header">
+                    <h1>Messages</h1>
+                </div>
+                <div class="page-content">
+                    <div class="instruction-banner" id="messagesInstruction">
+                        <div class="instruction-banner-text">Send and manage communications with your landlords. Use preset templates for common messages or create custom ones. All sent messages are logged in your history.</div>
+                        <div class="instruction-banner-buttons">
+                            <button class="btn-small" onclick="app.dismissInstruction('messages')">Got it</button>
+                            <button class="btn-icon btn-small" onclick="app.showInstruction('messages')">?</button>
+                        </div>
+                    </div>
+
+                    <div class="tab-buttons">
+                        <button class="tab-button active" data-tab="templates">Templates</button>
+                        <button class="tab-button" data-tab="history">History</button>
+                    </div>
+
+                    <!-- TEMPLATES TAB -->
+                    <div id="templatesTab" class="tab-content active">
+                        <div class="card">
+                            <div style="margin-bottom: 16px;">
+                                <label style="display: block; margin-bottom: 8px;">Select Template</label>
+                                <select id="templateSelect" style="margin-bottom: 12px;">
+                                    <option value="new_booking">New Booking Notification</option>
+                                    <option value="payment_reminder">Payment Reminder</option>
+                                    <option value="checkin">Check-in Instructions</option>
+                                    <option value="checkout">Check-out Reminder</option>
+                                    <option value="maintenance">Maintenance Notice</option>
+                                    <option value="custom">Custom Message</option>
+                                </select>
+                            </div>
+
+                            <form id="templateForm">
+                                <div class="form-group">
+                                    <label>Subject Line</label>
+                                    <input type="text" id="msgSubject" required>
+                                </div>
+
+                                <div class="form-group">
+                                    <label>Message Body</label>
+                                    <textarea id="msgBody" required></textarea>
+                                    <div style="font-size: 11px; color: var(--text-secondary); margin-top: 4px;">
+                                        Use: {{guest_name}}, {{property_name}}, {{check_in}}, {{check_out}}, {{total}}, {{payout}}, {{landlord_name}}
+                                    </div>
+                                </div>
+
+                                <button type="button" class="btn-secondary" id="previewTemplateBtn" style="width: 100%; margin-bottom: 12px;">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                                    Preview
+                                </button>
+
+                                <div id="templatePreviewArea"></div>
+
+                                <div class="form-group">
+                                    <label>Send To</label>
+                                    <select id="msgRecipient">
+                                        <option value="all">All Landlords</option>
+                                        <option value="specific">Specific Landlord</option>
+                                        <option value="booking">This Booking's Landlords</option>
+                                    </select>
+                                </div>
+
+                                <div class="form-group" id="specificLandlordDiv" style="display: none;">
+                                    <label>Select Landlord</label>
+                                    <select id="msgLandlord">
+                                        <!-- Populated by JS -->
+                                    </select>
+                                </div>
+
+                                <button type="submit" class="btn-primary" style="width: 100%;">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22 6 12 13 2 6"></polyline></svg>
+                                    Send Message
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+
+                    <!-- HISTORY TAB -->
+                    <div id="historyTab" class="tab-content">
+                        <div id="messageHistoryList" style="margin-top: 12px;">
+                            <!-- Populated by JS -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        <!-- FLOATING ACTION BUTTONS -->
+        <button class="fab" id="addPropertyFab" onclick="openPropertyModal()" style="display: none;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+        </button>
+        <button class="fab" id="addLandlordFab" onclick="openLandlordModal()" style="display: none;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+        </button>
+
+                <!-- MOBILE BOTTOM NAV -->
+        <nav class="bottom-nav" id="bottomNav">
+            <button data-page="dashboard" class="active">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+                <span>Home</span>
+            </button>
+            <button data-page="calendar">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+                <span>Calendar</span>
+            </button>
+            <button data-page="properties">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+                <span>Properties</span>
+            </button>
+            <button data-page="landlords">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+                <span>Landlords</span>
+            </button>
+            <button data-page="messages">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+                <span>Messages</span>
+            </button>
+            <button data-page="settings">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M12 1v6m0 6v6M4.22 4.22l4.24 4.24m6.08 0l4.24-4.24M1 12h6m6 0h6m-1.78 7.78l-4.24-4.24m-6.08 0l-4.24 4.24"></path></svg>
+                <span>Settings</span>
+            </button>
+        </nav>
+    </div>
+
+    <!-- LOGIN MODAL -->
+    <div class="modal-overlay" id="authModal">
+        <div class="modal">
+            <div style="text-align: center; margin-bottom: 24px;">
+                <div style="font-size: 32px; font-weight: 700; color: var(--primary);">StaySync</div>
+                <div style="font-size: 13px; color: var(--text-secondary); margin-top: 4px;">Airbnb Booking Management</div>
+            </div>
+
+            <form id="authForm">
+                <div class="form-group">
+                    <label>Username</label>
+                    <input type="text" id="authUsername" required autocomplete="username">
+                </div>
+                <div class="form-group">
+                    <label>Password</label>
+                    <input type="password" id="authPassword" required autocomplete="current-password">
+                </div>
+                <button type="submit" class="btn-primary" style="width: 100%; margin-bottom: 12px;">Login</button>
+                <button type="button" id="switchToSignup" class="btn-secondary" style="width: 100%;">Create Account</button>
+            </form>
+
+            <div id="signupForm" style="display: none;">
+                <form id="signupFormElement">
+                    <div class="form-group">
+                        <label>Username</label>
+                        <input type="text" id="signupUsername" required autocomplete="username">
+                    </div>
+                    <div class="form-group">
+                        <label>Password</label>
+                        <input type="password" id="signupPassword" required autocomplete="new-password">
+                        <div style="font-size: 11px; color: var(--text-secondary); margin-top: 4px;">Minimum 8 characters</div>
+                    </div>
+                    <div class="form-group">
+                        <label>Confirm Password</label>
+                        <input type="password" id="signupPasswordConfirm" required autocomplete="new-password">
+                    </div>
+                    <button type="submit" class="btn-primary" style="width: 100%; margin-bottom: 12px;">Create Account</button>
+                    <button type="button" id="switchToLogin" class="btn-secondary" style="width: 100%;">Back to Login</button>
+                </form>
+            </div>
+
+            <div id="authError" class="alert alert-danger" style="display: none; margin-top: 16px;">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+                <span id="authErrorText"></span>
+            </div>
+        </div>
+    </div>
+
+    <!-- PROPERTY MODAL -->
+    <div class="modal-overlay" id="propertyModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h2 id="propertyModalTitle">Add Property</h2>
+                <button class="modal-close" data-modal="propertyModal">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                </button>
+            </div>
+
+            <form id="propertyForm">
+                <div class="form-group">
+                    <label>Property Name *</label>
+                    <input type="text" id="propName" required>
+                </div>
+
+                <div class="form-group">
+                    <label>Property Type *</label>
+                    <select id="propType" required>
+                        <option value="">Select Type</option>
+                        <option value="Apartment">Apartment</option>
+                        <option value="House">House</option>
+                        <option value="Condo">Condo</option>
+                        <option value="Studio">Studio</option>
+                        <option value="Villa">Villa</option>
+                        <option value="Cabin">Cabin</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Street Address</label>
+                    <input type="text" id="propStreet" placeholder="123 Main St">
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>City</label>
+                        <input type="text" id="propCity">
+                    </div>
+                    <div class="form-group">
+                        <label>State/Province</label>
+                        <input type="text" id="propState">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>ZIP/Postal Code</label>
+                    <input type="text" id="propZip">
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Bedrooms</label>
+                        <input type="number" id="propBedrooms" min="0" value="1">
+                    </div>
+                    <div class="form-group">
+                        <label>Bathrooms</label>
+                        <input type="number" id="propBathrooms" min="0" step="0.5" value="1">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Max Guests</label>
+                    <input type="number" id="propMaxGuests" min="1" value="2">
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Nightly Rate</label>
+                        <div style="display: flex; gap: 8px;">
+                            <span style="display: flex; align-items: center; padding: 0 12px; background: var(--bg); border-radius: 8px; font-weight: 600;" id="currencySymbolProp">₦</span>
+                            <input type="number" id="propNightlyRate" min="0" step="100" value="10000" style="flex: 1;">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Cleaning Fee</label>
+                        <div style="display: flex; gap: 8px;">
+                            <span style="display: flex; align-items: center; padding: 0 12px; background: var(--bg); border-radius: 8px; font-weight: 600;">₦</span>
+                            <input type="number" id="propCleaningFee" min="0" step="100" value="2000" style="flex: 1;">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Status</label>
+                    <select id="propStatus">
+                        <option value="Active">Active</option>
+                        <option value="Inactive">Inactive</option>
+                        <option value="Maintenance">Maintenance</option>
+                    </select>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Check-in Time</label>
+                        <input type="time" id="propCheckIn">
+                    </div>
+                    <div class="form-group">
+                        <label>Check-out Time</label>
+                        <input type="time" id="propCheckOut">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Assigned Landlord(s)</label>
+                    <div id="landlordCheckboxes" style="display: flex; flex-direction: column; gap: 8px;">
+                        <!-- Dynamically populated -->
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Property Image</label>
+                    <div class="image-preview" id="propertyImagePreview">
+                        <div class="image-preview-placeholder">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+                            <span>Click to upload image</span>
+                        </div>
+                    </div>
+                    <input type="file" id="propertyImage" accept="image/*" style="display: none;">
+                    <div style="font-size: 11px; color: var(--text-secondary);">Recommended: under 500KB. Supports: JPG, PNG, GIF</div>
+                </div>
+
+                <div class="form-group">
+                    <label>Notes</label>
+                    <textarea id="propNotes" placeholder="Additional notes..."></textarea>
+                </div>
+
+                <div class="button-group">
+                    <button type="submit" class="btn-primary">Save Property</button>
+                    <button type="button" class="btn-secondary" data-modal="propertyModal">Cancel</button>
+<input type="hidden" id="propertyImageData">
+                                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- LANDLORD MODAL -->
+    <div class="modal-overlay" id="landlordModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h2 id="landlordModalTitle">Add Landlord</h2>
+                <button class="modal-close" data-modal="landlordModal">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                </button>
+            </div>
+
+            <form id="landlordForm">
+                <div class="form-group">
+                    <label>Full Name *</label>
+                    <input type="text" id="llName" required>
+                </div>
+
+                <div class="form-group">
+                    <label>Email *</label>
+                    <input type="email" id="llEmail" required>
+                </div>
+
+                <div class="form-group">
+                    <label>Phone</label>
+                    <input type="tel" id="llPhone">
+                </div>
+
+                <div class="form-group">
+                    <label>Company Name</label>
+                    <input type="text" id="llCompany">
+                </div>
+
+                <div class="form-group">
+                    <label>Payout Percentage (%)</label>
+                    <input type="number" id="llPayoutPercent" min="0" max="100" value="100">
+                </div>
+
+                <div class="form-group">
+                    <label>Notes</label>
+                    <textarea id="llNotes" placeholder="Additional notes..."></textarea>
+                </div>
+
+                <div class="button-group">
+                    <button type="submit" class="btn-primary">Save Landlord</button>
+                    <button type="button" class="btn-secondary" data-modal="landlordModal">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- BOOKING MODAL -->
+    <div class="modal-overlay" id="bookingModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h2 id="bookingModalTitle">Add Booking</h2>
+                <button class="modal-close" data-modal="bookingModal">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                </button>
+            </div>
+
+            <form id="bookingForm">
+                <div class="form-group">
+                    <label>Property *</label>
+                    <select id="bookingProperty" required>
+                        <option value="">Select Property</option>
+                    </select>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Check-in Date *</label>
+                        <input type="date" id="bookingCheckIn" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Check-out Date *</label>
+                        <input type="date" id="bookingCheckOut" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Guest Name *</label>
+                    <input type="text" id="bookingGuestName" required>
+                </div>
+
+                <div class="form-group">
+                    <label>Guest Email</label>
+                    <input type="email" id="bookingGuestEmail">
+                </div>
+
+                <div class="form-group">
+                    <label>Guest Phone</label>
+                    <input type="tel" id="bookingGuestPhone">
+                </div>
+
+                <div class="form-group">
+                    <label>Number of Guests *</label>
+                    <input type="number" id="bookingGuestCount" min="1" value="1" required>
+                </div>
+
+                <div style="background: var(--bg); border-radius: 8px; padding: 12px; margin: 16px 0;">
+                    <div style="font-weight: 600; margin-bottom: 12px;">Pricing</div>
+
+                    <div class="financial-row">
+                        <span class="financial-row label">Nightly Rate</span>
+                        <span class="currency" id="fNightlyRate">₦10,000</span>
+                    </div>
+
+                    <div class="financial-row">
+                        <span class="financial-row label">Nights</span>
+                        <span id="fNights">1</span>
+                    </div>
+
+                    <div class="financial-row">
+                        <span class="financial-row label">Room Total</span>
+                        <span class="currency" id="fRoomTotal">₦10,000</span>
+                    </div>
+
+                    <div class="financial-row">
+                        <span class="financial-row label">Cleaning Fee</span>
+                        <span class="currency" id="fCleaningFee">₦2,000</span>
+                    </div>
+
+                    <div class="form-row" style="margin: 12px 0;">
+                        <div class="form-group">
+                            <label>Service Fee</label>
+                            <div style="display: flex; gap: 8px;">
+                                <span style="display: flex; align-items: center; padding: 0 12px; background: var(--surface); border-radius: 8px;">₦</span>
+                                <input type="number" id="bookingServiceFee" min="0" step="100" value="0" style="flex: 1;">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Tax Amount</label>
+                            <div style="display: flex; gap: 8px;">
+                                <span style="display: flex; align-items: center; padding: 0 12px; background: var(--surface); border-radius: 8px;">₦</span>
+                                <input type="number" id="bookingTaxAmount" min="0" step="100" value="0" style="flex: 1;">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="financial-row total">
+                        <span>Total Revenue</span>
+                        <span class="currency" id="fTotalRevenue">₦12,000</span>
+                    </div>
+
+                    <div class="financial-row" style="margin-top: 12px; border-top: 1px dashed var(--border); padding-top: 12px;">
+                        <span class="financial-row label">Landlord Payout</span>
+                        <span class="currency" id="fLandlordPayout">₦12,000</span>
+                    </div>
+
+                    <div class="financial-row">
+                        <span class="financial-row label">Management Fee</span>
+                        <span class="currency" id="fManagementFee">₦0</span>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Status</label>
+                    <select id="bookingStatus">
+                        <option value="Confirmed">Confirmed</option>
+                        <option value="Checked In">Checked In</option>
+                        <option value="Checked Out">Checked Out</option>
+                        <option value="Cancelled">Cancelled</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Notes</label>
+                    <textarea id="bookingNotes" placeholder="Special requests, notes..."></textarea>
+                </div>
+
+                <div style="display:flex;align-items:center;gap:10px;padding:12px 0;">
+                    <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:14px;">
+                        <input type="checkbox" id="bookingNotifyLandlord" checked style="width:20px;height:20px;accent-color:var(--accent);">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
+                        Notify landlord(s) by email
+                    </label>
+                </div>
+
+                <div id="bookingConflict" class="alert alert-warning" style="display: none;">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3.05h16.94a2 2 0 0 0 1.71-3.05L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+                    <span>Warning: Dates overlap with existing booking</span>
+                </div>
+
+                <div class="button-group">
+                    <button type="submit" class="btn-primary">Save Booking</button>
+                    <button type="button" class="btn-secondary" data-modal="bookingModal">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // ===== AUTHENTICATION =====
+        const Auth = {
+            async hashPassword(password, salt = null) {
+                const saltArr = salt ? new Uint8Array(salt) : crypto.getRandomValues(new Uint8Array(16));
+                const encoder = new TextEncoder();
+                const data = encoder.encode(password);
+                const combined = new Uint8Array(saltArr.length + data.length);
+                combined.set(saltArr);
+                combined.set(data, saltArr.length);
+
+                // crypto.subtle requires HTTPS or localhost — fallback for file:// protocol
+                if (crypto.subtle) {
+                    const hash = await crypto.subtle.digest('SHA-256', combined);
+                    return {
+                        hash: Array.from(new Uint8Array(hash)).map(b => b.toString(16).padStart(2, '0')).join(''),
+                        salt: Array.from(saltArr).map(b => b.toString(16).padStart(2, '0')).join('')
+                    };
+                } else {
+                    // Simple fallback hash for file:// protocol (not cryptographically strong but functional)
+                    let h = 0x811c9dc5;
+                    for (let i = 0; i < combined.length; i++) {
+                        h ^= combined[i];
+                        h = Math.imul(h, 0x01000193);
+                    }
+                    const fallbackHash = (h >>> 0).toString(16).padStart(8, '0').repeat(8);
+                    return {
+                        hash: fallbackHash,
+                        salt: Array.from(saltArr).map(b => b.toString(16).padStart(2, '0')).join('')
+                    };
+                }
+            },
+
+            isLoggedIn() {
+                return sessionStorage.getItem('session') !== null;
+            },
+
+            getSession() {
+                const session = sessionStorage.getItem('session');
+                if (!session) return null;
+                try {
+                    const data = JSON.parse(session);
+                    if (Date.now() - data.timestamp > 8 * 60 * 60 * 1000) {
+                        sessionStorage.removeItem('session');
+                        return null;
+                    }
+                    return data;
+                } catch {
+                    return null;
+                }
+            },
+
+            async login(username, password) {
+                const settings = DB.getSetting();
+                if (!settings || !settings.passwordHash) {
+                    return { error: 'Account not found' };
+                }
+
+                const failedAttempts = parseInt(sessionStorage.getItem('failedAttempts') || '0');
+                const lockoutTime = sessionStorage.getItem('lockoutTime');
+
+                if (lockoutTime && Date.now() < parseInt(lockoutTime)) {
+                    return { error: 'Account locked. Try again in 5 minutes.' };
+                }
+
+                const hashResult = await this.hashPassword(password, settings.passwordSalt.match(/.{1,2}/g).map(b => parseInt(b, 16)));
+                if (hashResult.hash !== settings.passwordHash) {
+                    const newAttempts = failedAttempts + 1;
+                    if (newAttempts >= 5) {
+                        sessionStorage.setItem('lockoutTime', (Date.now() + 5 * 60 * 1000).toString());
+                        sessionStorage.removeItem('failedAttempts');
+                        return { error: 'Too many failed attempts. Locked for 5 minutes.' };
+                    }
+                    sessionStorage.setItem('failedAttempts', newAttempts.toString());
+                    return { error: 'Invalid credentials' };
+                }
+
+                sessionStorage.removeItem('failedAttempts');
+                sessionStorage.removeItem('lockoutTime');
+                const session = { username, timestamp: Date.now() };
+                sessionStorage.setItem('session', JSON.stringify(session));
+                return { success: true };
+            },
+
+            async signup(username, password) {
+                if (password.length < 8) {
+                    return { error: 'Password must be at least 8 characters' };
+                }
+
+                const existing = DB.getSetting();
+                if (existing && existing.passwordHash) {
+                    return { error: 'Account already exists' };
+                }
+
+                const hashResult = await this.hashPassword(password);
+                DB.saveSetting({
+                    passwordHash: hashResult.hash,
+                    passwordSalt: hashResult.salt
+                });
+
+                const session = { username, timestamp: Date.now() };
+                sessionStorage.setItem('session', JSON.stringify(session));
+                return { success: true };
+            },
+
+            logout() {
+                sessionStorage.removeItem('session');
+                location.reload();
+            }
+        };
+
+        // ===== DATABASE =====
+        const DB = {
+            getAll(key) {
+                try {
+                    return JSON.parse(localStorage.getItem(key) || '{}');
+                } catch {
+                    return {};
+                }
+            },
+
+            get(key, id) {
+                const all = this.getAll(key);
+                return all[id];
+            },
+
+            save(key, id, data) {
+                const all = this.getAll(key);
+                all[id] = { ...data, id, updatedAt: new Date().toISOString() };
+                localStorage.setItem(key, JSON.stringify(all));
+                ActivityLog.add(key === 'properties' ? 'Property' : key === 'landlords' ? 'Landlord' : 'Booking', `${data.name || data.guestName || 'Item'} saved`, id);
+                return all[id];
+            },
+
+            delete(key, id) {
+                const all = this.getAll(key);
+                delete all[id];
+                localStorage.setItem(key, JSON.stringify(all));
+                return true;
+            },
+
+            getList(key) {
+                const all = this.getAll(key);
+                return Object.values(all);
+            },
+
+            getSetting() {
+                try {
+                    return JSON.parse(localStorage.getItem('settings') || '{}');
+                } catch {
+                    return {};
+                }
+            },
+
+            saveSetting(data) {
+                const existing = this.getSetting();
+                const merged = { ...existing, ...data };
+                localStorage.setItem('settings', JSON.stringify(merged));
+                return merged;
+            }
+        };
+
+        // ===== ACTIVITY LOG =====
+        const ActivityLog = {
+            add(type, description, relatedId = null) {
+                const logs = DB.getAll('activity');
+                const id = crypto.randomUUID();
+                logs[id] = { id, type, description, timestamp: new Date().toISOString(), relatedId };
+                localStorage.setItem('activity', JSON.stringify(logs));
+            }
+        };
+
+        // ===== UI HELPERS =====
+        const UI = {
+            showModal(modalId) {
+                document.getElementById(modalId).classList.add('show');
+            },
+
+            hideModal(modalId) {
+                document.getElementById(modalId).classList.remove('show');
+            },
+
+            showPage(pageId) {
+                document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+                document.getElementById(pageId).classList.add('active');
+                this.updateNavigation(pageId);
+            },
+
+            updateNavigation(pageId) {
+                document.querySelectorAll('[data-page]').forEach(btn => {
+                    btn.classList.toggle('active', btn.dataset.page === pageId);
+                });
+            },
+
+            formatCurrency(amount) {
+                const settings = DB.getSetting();
+                const symbol = { NGN: '₦', USD: '$', EUR: '€', GBP: '£' }[settings.currency || 'NGN'] || '₦';
+                return symbol + (amount / 100).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+            },
+
+            formatDate(dateStr) {
+                if (!dateStr) return '';
+                return new Date(dateStr).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+            },
+
+            formatTime(timeStr) {
+                if (!timeStr) return '';
+                return timeStr;
+            }
+        };
+
+        // ===== INITIALIZATION =====
+        function initAuth() {
+            if (Auth.isLoggedIn()) {
+                document.getElementById('authModal').classList.remove('show');
+                init();
+            } else {
+                document.getElementById('authModal').classList.add('show');
+            }
+        }
+
+        function init() {
+            initCalendar();
+            initNavigation();
+            initProperties();
+            initLandlords();
+            initBookings();
+            initSettings();
+            renderDashboard();
+            updateCurrencySymbols();
+            checkOnline();
+            initInstructionBanners();
+            initPropertyImageUpload();
+            initMessageTemplates();
+            populateLandlordCheckboxes();
+            renderMessageHistory();
+            displayApiStatus();
+        }
+
+        function initNavigation() {
+            document.querySelectorAll('[data-page]').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const pageId = btn.dataset.page;
+                    UI.showPage(pageId);
+                    if (pageId === 'calendar') renderCalendar();
+                    if (pageId === 'properties') renderProperties();
+                    if (pageId === 'landlords') renderLandlords();
+                    if (pageId === 'dashboard') renderDashboard();
+                    updateFabVisibility();
+                                    });
+            });
+
+            document.querySelectorAll('.modal-close, [data-modal]').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const modalId = btn.dataset.modal || btn.closest('.modal-overlay').id;
+                    UI.hideModal(modalId);
+                });
+            });
+
+            document.getElementById('authModal').addEventListener('click', (e) => {
+                if (e.target.id === 'authModal') return;
+            });
+
+            document.querySelectorAll('.modal-overlay').forEach(modal => {
+                modal.addEventListener('click', (e) => {
+                    if (e.target === modal) UI.hideModal(modal.id);
+                });
+            });
+        }
+
+        // ===== DASHBOARD =====
+        function renderDashboard() {
+            const properties = DB.getList('properties');
+            const landlords = DB.getList('landlords');
+            const bookings = DB.getList('bookings');
+            const today = new Date().toISOString().split('T')[0];
+            const settings = DB.getSetting();
+
+            document.getElementById('statProperties').textContent = properties.length;
+            document.getElementById('statLandlords').textContent = landlords.length;
+
+            const thisMonth = bookings.filter(b => {
+                const month = b.checkIn.slice(0, 7);
+                return month === today.slice(0, 7);
+            }).length;
+            document.getElementById('statBookings').textContent = thisMonth;
+
+            const thisMonthRevenue = bookings
+                .filter(b => b.checkIn.slice(0, 7) === today.slice(0, 7))
+                .reduce((sum, b) => sum + (b.totalRevenue || 0), 0);
+            document.getElementById('statRevenue').textContent = UI.formatCurrency(thisMonthRevenue);
+
+            const todayCheckIns = bookings.filter(b => b.checkIn === today && b.status !== 'Cancelled');
+            const todayCheckOuts = bookings.filter(b => b.checkOut === today && b.status !== 'Cancelled');
+
+            let todayHtml = '';
+            if (todayCheckIns.length) {
+                todayHtml += `<div style="margin-bottom: 8px;"><strong>Check-ins (${todayCheckIns.length}):</strong> ${todayCheckIns.map(b => b.guestName).join(', ')}</div>`;
+            }
+            if (todayCheckOuts.length) {
+                todayHtml += `<div><strong>Check-outs (${todayCheckOuts.length}):</strong> ${todayCheckOuts.map(b => b.guestName).join(', ')}</div>`;
+            }
+            document.getElementById('todayActivity').innerHTML = todayHtml || '<div style="color: var(--text-secondary);">No activity today</div>';
+
+            const nextWeek = new Date();
+            nextWeek.setDate(nextWeek.getDate() + 7);
+            const upcomingList = bookings
+                .filter(b => b.checkIn >= today && b.checkIn <= nextWeek.toISOString().split('T')[0] && b.status !== 'Cancelled')
+                .sort((a, b) => a.checkIn.localeCompare(b.checkIn))
+                .slice(0, 5);
+
+            if (upcomingList.length) {
+                document.getElementById('upcomingBookings').innerHTML = upcomingList.map(b => {
+                    const prop = DB.get('properties', b.propertyId);
+                    return `<div style="padding: 8px 0; border-bottom: 1px solid var(--border);">
+                        <div style="font-weight: 600; font-size: 13px;">${b.guestName}</div>
+                        <div style="font-size: 12px; color: var(--text-secondary);">${prop?.name} • ${UI.formatDate(b.checkIn)}</div>
+                    </div>`;
+                }).join('');
+            }
+
+            const activities = DB.getList('activity').sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp)).slice(0, 10);
+            if (activities.length) {
+                document.getElementById('recentActivity').innerHTML = activities.map(a => {
+                    const time = new Date(a.timestamp).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+                    return `<div class="activity-item">
+                        <div class="activity-time">${time}</div>
+                        <div class="activity-text">${a.description}</div>
+                    </div>`;
+                }).join('');
+            }
+
+            const daysInMonth = new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0).getDate();
+            const occupiedDays = new Set(bookings.filter(b => b.status !== 'Cancelled').flatMap(b => {
+                const days = [];
+                const start = new Date(b.checkIn);
+                const end = new Date(b.checkOut);
+                for (let d = new Date(start); d < end; d.setDate(d.getDate() + 1)) {
+                    if (d.getMonth() === new Date().getMonth()) {
+                        days.push(d.getDate());
+                    }
+                }
+                return days;
+            })).size;
+
+            const occupancy = Math.round((occupiedDays / daysInMonth) * 100);
+            document.getElementById('occupancyFill').style.width = occupancy + '%';
+            document.getElementById('occupancyLabel').textContent = occupancy + '%';
+        }
+
+        // ===== PROPERTIES =====
+        function initProperties() {
+            document.getElementById('addPropertyBtn').addEventListener('click', () => {
+                document.getElementById('propertyModalTitle').textContent = 'Add Property';
+                document.getElementById('propertyForm').reset();
+                document.getElementById('propertyForm').dataset.id = '';
+                renderLandlordCheckboxes();
+                UI.showModal('propertyModal');
+            });
+
+            document.getElementById('propertyForm').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const id = document.getElementById('propertyForm').dataset.id || crypto.randomUUID();
+                const landlordIds = Array.from(document.querySelectorAll('#landlordCheckboxes input:checked')).map(cb => cb.value);
+
+                const data = {
+                    name: document.getElementById('propName').value,
+                    type: document.getElementById('propType').value,
+                    address: {
+                        street: document.getElementById('propStreet').value,
+                        city: document.getElementById('propCity').value,
+                        state: document.getElementById('propState').value,
+                        zip: document.getElementById('propZip').value
+                    },
+                    bedrooms: parseInt(document.getElementById('propBedrooms').value),
+                    bathrooms: parseFloat(document.getElementById('propBathrooms').value),
+                    maxGuests: parseInt(document.getElementById('propMaxGuests').value),
+                    nightlyRate: Math.round(parseFloat(document.getElementById('propNightlyRate').value) * 100),
+                    cleaningFee: Math.round(parseFloat(document.getElementById('propCleaningFee').value) * 100),
+                    landlordIds,
+                    status: document.getElementById('propStatus').value,
+                    checkInTime: document.getElementById('propCheckIn').value || '14:00',
+                    checkOutTime: document.getElementById('propCheckOut').value || '11:00',
+                    notes: document.getElementById('propNotes').value,
+                    color: DB.get('properties', id)?.color || getPropertyColor(Object.values(DB.getAll('properties')).length),
+                    createdAt: DB.get('properties', id)?.createdAt || new Date().toISOString()
+                };
+
+                DB.save('properties', id, data);
+                UI.hideModal('propertyModal');
+                renderProperties();
+            });
+
+            document.getElementById('propertySearch').addEventListener('input', debounce(renderProperties, 300));
+            document.querySelectorAll('[data-filter]').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    document.querySelectorAll('[data-filter]').forEach(b => b.classList.remove('active'));
+                    this.classList.add('active');
+                    renderProperties();
+                });
+            });
+        }
+
+        function renderProperties() {
+            const search = document.getElementById('propertySearch').value.toLowerCase();
+            const filter = document.querySelector('[data-filter].active').dataset.filter;
+            let properties = DB.getList('properties');
+
+            if (search) {
+                properties = properties.filter(p => p.name.toLowerCase().includes(search));
+            }
+            if (filter !== 'all') {
+                properties = properties.filter(p => p.status === filter.charAt(0).toUpperCase() + filter.slice(1));
+            }
+
+            const html = properties.map(prop => {
+                const landlordCount = prop.landlordIds?.length || 0;
+                const bookingCount = DB.getList('bookings').filter(b => b.propertyId === prop.id && b.status !== 'Cancelled').length;
+
+                return `<div class="list-item" data-id="${prop.id}">
+                    <div class="list-item-content">
+                        <div class="list-item-title">${prop.name}</div>
+                        <div class="list-item-subtitle">${prop.type} • ${prop.bedrooms}BR ${prop.bathrooms}BA</div>
+                        <div style="margin-top: 8px; display: flex; gap: 8px;">
+                            <span class="list-item-badge" style="background-color: ${prop.color}40; color: ${prop.color};">${UI.formatCurrency(prop.nightlyRate)}/night</span>
+                            <span class="list-item-badge badge-${prop.status.toLowerCase()}">${prop.status}</span>
+                        </div>
+                    </div>
+                </div>`;
+            }).join('');
+
+            document.getElementById('propertiesList').innerHTML = html || '<div class="empty-state"><div class="empty-state-icon">📭</div><h3>No Properties</h3><p>Add your first property to get started</p></div>';
+
+            document.querySelectorAll('#propertiesList .list-item').forEach(item => {
+                item.addEventListener('click', () => {
+                    const id = item.dataset.id;
+                    const prop = DB.get('properties', id);
+                    document.getElementById('propertyModalTitle').textContent = 'Edit Property';
+                    document.getElementById('propName').value = prop.name;
+                    document.getElementById('propType').value = prop.type;
+                    document.getElementById('propStreet').value = prop.address.street;
+                    document.getElementById('propCity').value = prop.address.city;
+                    document.getElementById('propState').value = prop.address.state;
+                    document.getElementById('propZip').value = prop.address.zip;
+                    document.getElementById('propBedrooms').value = prop.bedrooms;
+                    document.getElementById('propBathrooms').value = prop.bathrooms;
+                    document.getElementById('propMaxGuests').value = prop.maxGuests;
+                    document.getElementById('propNightlyRate').value = prop.nightlyRate / 100;
+                    document.getElementById('propCleaningFee').value = prop.cleaningFee / 100;
+                    document.getElementById('propStatus').value = prop.status;
+                    document.getElementById('propCheckIn').value = prop.checkInTime;
+                    document.getElementById('propCheckOut').value = prop.checkOutTime;
+                    document.getElementById('propNotes').value = prop.notes;
+                    document.getElementById('propertyForm').dataset.id = id;
+                    renderLandlordCheckboxes(prop.landlordIds || []);
+                    UI.showModal('propertyModal');
+                });
+            });
+        }
+
+        function renderLandlordCheckboxes(selected = []) {
+            const landlords = DB.getList('landlords');
+            const html = landlords.map(ll => `
+                <label style="display: flex; align-items: center; gap: 8px; padding: 8px; background: var(--bg); border-radius: 8px; cursor: pointer;">
+                    <input type="checkbox" value="${ll.id}" ${selected.includes(ll.id) ? 'checked' : ''}>
+                    <span style="font-size: 13px;">${ll.name}</span>
+                </label>
+            `).join('');
+            document.getElementById('landlordCheckboxes').innerHTML = html || '<div style="font-size: 12px; color: var(--text-secondary);">No landlords created yet</div>';
+        }
+
+        // ===== LANDLORDS =====
+        function initLandlords() {
+            document.getElementById('addLandlordBtn').addEventListener('click', () => {
+                document.getElementById('landlordModalTitle').textContent = 'Add Landlord';
+                document.getElementById('landlordForm').reset();
+                document.getElementById('landlordForm').dataset.id = '';
+                UI.showModal('landlordModal');
+            });
+
+            document.getElementById('landlordForm').addEventListener('submit', (e) => {
+                e.preventDefault();
+                const id = document.getElementById('landlordForm').dataset.id || crypto.randomUUID();
+                const data = {
+                    name: document.getElementById('llName').value,
+                    email: document.getElementById('llEmail').value,
+                    phone: document.getElementById('llPhone').value,
+                    company: document.getElementById('llCompany').value,
+                    payoutPercent: parseInt(document.getElementById('llPayoutPercent').value),
+                    notes: document.getElementById('llNotes').value,
+                    createdAt: DB.get('landlords', id)?.createdAt || new Date().toISOString()
+                };
+                DB.save('landlords', id, data);
+                UI.hideModal('landlordModal');
+                renderLandlords();
+                renderLandlordCheckboxes();
+            });
+
+            document.getElementById('landlordSearch').addEventListener('input', debounce(renderLandlords, 300));
+        }
+
+        function renderLandlords() {
+            const search = document.getElementById('landlordSearch').value.toLowerCase();
+            let landlords = DB.getList('landlords');
+
+            if (search) {
+                landlords = landlords.filter(ll => ll.name.toLowerCase().includes(search) || ll.email.toLowerCase().includes(search));
+            }
+
+            const html = landlords.map(ll => {
+                const propCount = DB.getList('properties').filter(p => p.landlordIds?.includes(ll.id)).length;
+                const bookingCount = DB.getList('bookings').filter(b => {
+                    const prop = DB.get('properties', b.propertyId);
+                    return prop && prop.landlordIds?.includes(ll.id) && b.status !== 'Cancelled';
+                }).length;
+
+                return `<div class="list-item" data-id="${ll.id}">
+                    <div class="list-item-content">
+                        <div class="list-item-title">${ll.name}</div>
+                        <div class="list-item-subtitle">${ll.email}</div>
+                        <div style="margin-top: 8px; display: flex; gap: 8px;">
+                            <span class="list-item-badge" style="background: var(--bg);">${propCount} properties</span>
+                            <span class="list-item-badge" style="background: var(--bg);">${ll.payoutPercent}% payout</span>
+                        </div>
+                    </div>
+                </div>`;
+            }).join('');
+
+            document.getElementById('landlordsList').innerHTML = html || '<div class="empty-state"><div class="empty-state-icon">👥</div><h3>No Landlords</h3><p>Add your first landlord to get started</p></div>';
+
+            document.querySelectorAll('#landlordsList .list-item').forEach(item => {
+                item.addEventListener('click', () => {
+                    const id = item.dataset.id;
+                    const ll = DB.get('landlords', id);
+                    document.getElementById('landlordModalTitle').textContent = 'Edit Landlord';
+                    document.getElementById('llName').value = ll.name;
+                    document.getElementById('llEmail').value = ll.email;
+                    document.getElementById('llPhone').value = ll.phone;
+                    document.getElementById('llCompany').value = ll.company;
+                    document.getElementById('llPayoutPercent').value = ll.payoutPercent;
+                    document.getElementById('llNotes').value = ll.notes;
+                    document.getElementById('landlordForm').dataset.id = id;
+                    UI.showModal('landlordModal');
+                });
+            });
+        }
+
+        // ===== CALENDAR & BOOKINGS =====
+        let currentDate = new Date();
+
+        function initCalendar() {
+            document.getElementById('prevMonth').addEventListener('click', () => {
+                currentDate.setMonth(currentDate.getMonth() - 1);
+                renderCalendar();
+            });
+
+            document.getElementById('nextMonth').addEventListener('click', () => {
+                currentDate.setMonth(currentDate.getMonth() + 1);
+                renderCalendar();
+            });
+
+            document.getElementById('addBookingBtn').addEventListener('click', () => {
+                document.getElementById('bookingModalTitle').textContent = 'Add Booking';
+                document.getElementById('bookingForm').reset();
+                document.getElementById('bookingForm').dataset.id = '';
+                const today = new Date().toISOString().split('T')[0];
+                document.getElementById('bookingCheckIn').value = today;
+                document.getElementById('bookingCheckOut').value = today;
+                renderBookingPropertySelect();
+                UI.showModal('bookingModal');
+            });
+        }
+
+        function renderCalendar() {
+            const year = currentDate.getFullYear();
+            const month = currentDate.getMonth();
+            const monthName = currentDate.toLocaleString('en-US', { month: 'long', year: 'numeric' });
+            document.getElementById('calendarMonth').textContent = monthName;
+
+            const firstDay = new Date(year, month, 1);
+            const lastDay = new Date(year, month + 1, 0);
+            const prevLastDay = new Date(year, month, 0);
+            const daysInMonth = lastDay.getDate();
+            const startDate = firstDay.getDay();
+
+            let html = '<div style="text-align: center; font-size: 11px; font-weight: 600; padding: 8px; text-transform: uppercase;">Sun</div>';
+            html += '<div style="text-align: center; font-size: 11px; font-weight: 600; padding: 8px; text-transform: uppercase;">Mon</div>';
+            html += '<div style="text-align: center; font-size: 11px; font-weight: 600; padding: 8px; text-transform: uppercase;">Tue</div>';
+            html += '<div style="text-align: center; font-size: 11px; font-weight: 600; padding: 8px; text-transform: uppercase;">Wed</div>';
+            html += '<div style="text-align: center; font-size: 11px; font-weight: 600; padding: 8px; text-transform: uppercase;">Thu</div>';
+            html += '<div style="text-align: center; font-size: 11px; font-weight: 600; padding: 8px; text-transform: uppercase;">Fri</div>';
+            html += '<div style="text-align: center; font-size: 11px; font-weight: 600; padding: 8px; text-transform: uppercase;">Sat</div>';
+
+            for (let i = startDate - 1; i >= 0; i--) {
+                const day = prevLastDay.getDate() - i;
+                html += `<div class="calendar-day other-month"><div class="calendar-day-number">${day}</div></div>`;
+            }
+
+            const today = new Date().toISOString().split('T')[0];
+            const bookings = DB.getList('bookings');
+            const propertyFilter = document.getElementById('propertyFilterSelect').value;
+
+            for (let day = 1; day <= daysInMonth; day++) {
+                const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                const isToday = dateStr === today;
+
+                const dayBookings = bookings.filter(b => {
+                    if (b.status === 'Cancelled') return false;
+                    if (propertyFilter && b.propertyId !== propertyFilter) return false;
+                    return dateStr >= b.checkIn && dateStr < b.checkOut;
+                });
+
+                const bookingBarsHtml = dayBookings.slice(0, 3).map(b => {
+                    const prop = DB.get('properties', b.propertyId);
+                    return `<div class="booking-bar" style="background: ${prop?.color || '#2563eb'};"></div>`;
+                }).join('');
+
+                let dayClass = 'calendar-day';
+                if (isToday) dayClass += ' today';
+
+                html += `<div class="${dayClass}" data-date="${dateStr}">
+                    <div class="calendar-day-number">${day}</div>
+                    ${dayBookings.length > 0 ? `<div class="calendar-day-bookings">${bookingBarsHtml}${dayBookings.length > 3 ? `<div style="font-size: 7px; color: var(--text-secondary);">+${dayBookings.length - 3}</div>` : ''}</div>` : ''}
+                </div>`;
+            }
+
+            const remainingDays = 42 - (startDate + daysInMonth);
+            for (let day = 1; day <= remainingDays; day++) {
+                html += `<div class="calendar-day other-month"><div class="calendar-day-number">${day}</div></div>`;
+            }
+
+            document.getElementById('calendarGrid').innerHTML = html;
+
+            document.querySelectorAll('[data-date]').forEach(day => {
+                day.addEventListener('click', () => {
+                    const date = day.dataset.date;
+                    const dateBookings = bookings.filter(b => {
+                        if (b.status === 'Cancelled') return false;
+                        return date >= b.checkIn && date < b.checkOut;
+                    }).sort((a, b) => a.checkIn.localeCompare(b.checkIn));
+
+                    let bookingsHtml = '<div class="card"><div style="font-weight: 600; margin-bottom: 12px;">Bookings on ' + UI.formatDate(date) + '</div>';
+                    if (dateBookings.length) {
+                        bookingsHtml += dateBookings.map(b => {
+                            const prop = DB.get('properties', b.propertyId);
+                            return `<div class="list-item" style="cursor: pointer; margin-bottom: 8px;" data-booking-id="${b.id}">
+                                <div style="flex: 1;">
+                                    <div style="font-weight: 600; font-size: 13px;">${b.guestName}</div>
+                                    <div style="font-size: 12px; color: var(--text-secondary);">${prop?.name} • ${b.checkIn} to ${b.checkOut}</div>
+                                </div>
+                                <span class="list-item-badge badge-${b.status.toLowerCase().replace(' ', '-')}">${b.status}</span>
+                            </div>`;
+                        }).join('');
+                    } else {
+                        bookingsHtml += '<div style="font-size: 13px; color: var(--text-secondary); text-align: center; padding: 20px;">No bookings</div>';
+                    }
+                    bookingsHtml += '</div>';
+
+                    document.getElementById('calendarBookingsList').innerHTML = bookingsHtml;
+
+                    document.querySelectorAll('[data-booking-id]').forEach(item => {
+                        item.addEventListener('click', () => {
+                            const bookingId = item.dataset.bookingId;
+                            editBooking(bookingId);
+                        });
+                    });
+                });
+            });
+
+            renderBookingPropertySelect();
+        }
+
+        function initBookings() {
+            document.getElementById('bookingProperty').addEventListener('change', updateBookingCalculations);
+            document.getElementById('bookingCheckIn').addEventListener('change', updateBookingCalculations);
+            document.getElementById('bookingCheckOut').addEventListener('change', updateBookingCalculations);
+            document.getElementById('bookingServiceFee').addEventListener('change', updateBookingCalculations);
+            document.getElementById('bookingTaxAmount').addEventListener('change', updateBookingCalculations);
+
+            document.getElementById('bookingForm').addEventListener('submit', (e) => {
+                e.preventDefault();
+                const id = document.getElementById('bookingForm').dataset.id || crypto.randomUUID();
+                const propertyId = document.getElementById('bookingProperty').value;
+                const prop = DB.get('properties', propertyId);
+
+                const data = {
+                    propertyId,
+                    guestName: document.getElementById('bookingGuestName').value,
+                    guestEmail: document.getElementById('bookingGuestEmail').value,
+                    guestPhone: document.getElementById('bookingGuestPhone').value,
+                    guestCount: parseInt(document.getElementById('bookingGuestCount').value),
+                    checkIn: document.getElementById('bookingCheckIn').value,
+                    checkOut: document.getElementById('bookingCheckOut').value,
+                    nightlyRate: prop.nightlyRate,
+                    cleaningFee: prop.cleaningFee,
+                    serviceFee: Math.round(parseFloat(document.getElementById('bookingServiceFee').value || 0) * 100),
+                    taxAmount: Math.round(parseFloat(document.getElementById('bookingTaxAmount').value || 0) * 100),
+                    status: document.getElementById('bookingStatus').value,
+                    notes: document.getElementById('bookingNotes').value,
+                    createdAt: DB.get('bookings', id)?.createdAt || new Date().toISOString()
+                };
+
+                const checkInDate = new Date(data.checkIn);
+                const checkOutDate = new Date(data.checkOut);
+                const nights = Math.max(1, Math.ceil((checkOutDate - checkInDate) / (1000 * 60 * 60 * 24)));
+
+                data.totalRevenue = (data.nightlyRate * nights) + data.cleaningFee + data.serviceFee + data.taxAmount;
+                data.landlordPayout = Math.round(data.totalRevenue * (prop.landlordIds?.length ? DB.get('landlords', prop.landlordIds[0])?.payoutPercent || 100 : 100) / 100);
+                data.managementFee = data.totalRevenue - data.landlordPayout;
+
+                const isNew = !DB.get('bookings', id);
+                DB.save('bookings', id, data);
+
+                // Log activity
+                DB.save('activity', crypto.randomUUID(), {
+                    type: isNew ? 'booking_created' : 'booking_updated',
+                    description: `${isNew ? 'New booking' : 'Updated booking'}: ${data.guestName} at ${prop.name} (${data.checkIn} to ${data.checkOut})`,
+                    timestamp: new Date().toISOString(),
+                    relatedId: id
+                });
+
+                // Send landlord notification if checkbox is checked
+                if (document.getElementById('bookingNotifyLandlord').checked) {
+                    const notifType = data.status === 'Cancelled' ? 'cancelled' : (isNew ? 'new' : 'updated');
+                    sendLandlordNotification(data, prop, notifType);
+                }
+
+                UI.hideModal('bookingModal');
+                renderCalendar();
+                renderDashboard();
+            });
+        }
+
+        // ===== EMAIL NOTIFICATION SYSTEM =====
+        async function sendLandlordNotification(booking, property, type) {
+            const settings = DB.getSetting();
+            const landlords = (property.landlordIds || []).map(id => DB.get('landlords', id)).filter(Boolean);
+            if (!landlords.length) return;
+
+            const curr = settings.currencySymbol || '₦';
+            const checkInDate = new Date(booking.checkIn);
+            const checkOutDate = new Date(booking.checkOut);
+            const nights = Math.max(1, Math.ceil((checkOutDate - checkInDate) / (1000*60*60*24)));
+
+            const subjects = {
+                'new': `New Booking: ${property.name} — ${booking.guestName}`,
+                'updated': `Booking Updated: ${property.name} — ${booking.guestName}`,
+                'cancelled': `Booking Cancelled: ${property.name} — ${booking.guestName}`
+            };
+
+            const emailBody = buildEmailBody(booking, property, settings, type, nights, curr);
+            const plainText = buildPlainText(booking, property, settings, type, nights, curr);
+
+            for (const landlord of landlords) {
+                // Determine if we're hosted on Vercel (server has the API key)
+                const isHosted = window.location.hostname !== 'localhost' && !window.location.protocol.startsWith('file');
+                const canSendEmail = isHosted || settings.resendApiKey;
+
+                if (canSendEmail) {
+                    try {
+                        const emailPayload = {
+                            from: settings.fromEmail || `${settings.managerName || 'StaySync'} <onboarding@resend.dev>`,
+                            to: [landlord.email],
+                            subject: subjects[type],
+                            html: emailBody
+                        };
+
+                        // On Vercel: server has the key. Locally: send key from settings.
+                        const endpoint = isHosted ? '/api/send-email' : 'https://api.resend.com/emails';
+                        const headers = isHosted
+                            ? { 'Content-Type': 'application/json' }
+                            : { 'Authorization': `Bearer ${settings.resendApiKey}`, 'Content-Type': 'application/json' };
+
+                        const res = await fetch(endpoint, {
+                            method: 'POST',
+                            headers,
+                            body: JSON.stringify(emailPayload)
+                        });
+                        if (res.ok) {
+                            UI.toast(`Email sent to ${landlord.name}`, 'success');
+                        } else {
+                            throw new Error('Email API error');
+                        }
+                    } catch (err) {
+                        // Queue for retry
+                        const queue = JSON.parse(localStorage.getItem('staysync_email_queue') || '[]');
+                        queue.push({ landlord, subject: subjects[type], body: emailBody, timestamp: new Date().toISOString() });
+                        localStorage.setItem('staysync_email_queue', JSON.stringify(queue));
+                        // Offer mailto fallback
+                        offerEmailFallback(landlord, subjects[type], plainText);
+                    }
+                } else {
+                    offerEmailFallback(landlord, subjects[type], plainText);
+                }
+            }
+        }
+
+        function offerEmailFallback(landlord, subject, plainText) {
+            const mailtoLink = `mailto:${landlord.email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(plainText)}`;
+            const toast = document.createElement('div');
+            toast.className = 'toast';
+            toast.style.cssText = 'padding:12px 16px;display:flex;flex-direction:column;gap:8px;';
+            toast.innerHTML = `
+                <div style="font-size:13px;">Email to ${landlord.name} ready</div>
+                <div style="display:flex;gap:8px;">
+                    <a href="${mailtoLink}" style="background:var(--accent);color:#fff;padding:6px 12px;border-radius:6px;font-size:12px;text-decoration:none;">Open in Email App</a>
+                    <button onclick="navigator.clipboard.writeText(${JSON.stringify(plainText).replace(/"/g, '&quot;')});this.textContent='Copied!'" style="background:var(--surface);color:var(--text);border:1px solid var(--border);padding:6px 12px;border-radius:6px;font-size:12px;cursor:pointer;">Copy Content</button>
+                </div>
+            `;
+            document.body.appendChild(toast);
+            setTimeout(() => { toast.style.opacity = '0'; setTimeout(() => toast.remove(), 300); }, 10000);
+        }
+
+        function buildEmailBody(booking, property, settings, type, nights, curr) {
+            const statusColors = { 'new': '#16a34a', 'updated': '#d97706', 'cancelled': '#dc2626' };
+            const statusLabels = { 'new': 'New Booking', 'updated': 'Booking Updated', 'cancelled': 'Booking Cancelled' };
+            return `
+            <div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;max-width:600px;margin:0 auto;padding:20px;">
+                <div style="background:${statusColors[type]};color:#fff;padding:16px 20px;border-radius:8px 8px 0 0;">
+                    <h2 style="margin:0;font-size:18px;">${statusLabels[type]}</h2>
+                    <p style="margin:4px 0 0;opacity:0.9;font-size:14px;">${property.name}</p>
+                </div>
+                <div style="background:#fff;border:1px solid #e2e8f0;border-top:none;padding:20px;border-radius:0 0 8px 8px;">
+                    <h3 style="margin:0 0 12px;font-size:15px;color:#1e40af;">Property Details</h3>
+                    <p style="margin:0 0 4px;font-size:14px;color:#334155;">${property.name}</p>
+                    <p style="margin:0 0 16px;font-size:13px;color:#64748b;">${property.address?.street || ''}, ${property.address?.city || ''} ${property.address?.state || ''}</p>
+
+                    <h3 style="margin:0 0 12px;font-size:15px;color:#1e40af;">Guest Information</h3>
+                    <table style="width:100%;border-collapse:collapse;margin-bottom:16px;font-size:14px;">
+                        <tr><td style="padding:6px 0;color:#64748b;">Guest</td><td style="padding:6px 0;text-align:right;font-weight:600;">${booking.guestName}</td></tr>
+                        ${booking.guestEmail ? `<tr><td style="padding:6px 0;color:#64748b;">Email</td><td style="padding:6px 0;text-align:right;">${booking.guestEmail}</td></tr>` : ''}
+                        ${booking.guestPhone ? `<tr><td style="padding:6px 0;color:#64748b;">Phone</td><td style="padding:6px 0;text-align:right;">${booking.guestPhone}</td></tr>` : ''}
+                        <tr><td style="padding:6px 0;color:#64748b;">Guests</td><td style="padding:6px 0;text-align:right;">${booking.guestCount}</td></tr>
+                    </table>
+
+                    <h3 style="margin:0 0 12px;font-size:15px;color:#1e40af;">Dates</h3>
+                    <table style="width:100%;border-collapse:collapse;margin-bottom:16px;font-size:14px;">
+                        <tr><td style="padding:6px 0;color:#64748b;">Check-in</td><td style="padding:6px 0;text-align:right;font-weight:600;">${booking.checkIn}</td></tr>
+                        <tr><td style="padding:6px 0;color:#64748b;">Check-out</td><td style="padding:6px 0;text-align:right;font-weight:600;">${booking.checkOut}</td></tr>
+                        <tr><td style="padding:6px 0;color:#64748b;">Nights</td><td style="padding:6px 0;text-align:right;">${nights}</td></tr>
+                    </table>
+
+                    <h3 style="margin:0 0 12px;font-size:15px;color:#1e40af;">Financial Breakdown</h3>
+                    <table style="width:100%;border-collapse:collapse;margin-bottom:16px;font-size:14px;">
+                        <tr><td style="padding:6px 0;color:#64748b;">${curr}${(booking.nightlyRate/100).toLocaleString()} × ${nights} nights</td><td style="padding:6px 0;text-align:right;">${curr}${((booking.nightlyRate*nights)/100).toLocaleString()}</td></tr>
+                        <tr><td style="padding:6px 0;color:#64748b;">Cleaning fee</td><td style="padding:6px 0;text-align:right;">${curr}${(booking.cleaningFee/100).toLocaleString()}</td></tr>
+                        ${booking.serviceFee ? `<tr><td style="padding:6px 0;color:#64748b;">Service fee</td><td style="padding:6px 0;text-align:right;">${curr}${(booking.serviceFee/100).toLocaleString()}</td></tr>` : ''}
+                        ${booking.taxAmount ? `<tr><td style="padding:6px 0;color:#64748b;">Tax</td><td style="padding:6px 0;text-align:right;">${curr}${(booking.taxAmount/100).toLocaleString()}</td></tr>` : ''}
+                        <tr style="border-top:2px solid #e2e8f0;font-weight:700;"><td style="padding:10px 0;">Total Revenue</td><td style="padding:10px 0;text-align:right;">${curr}${(booking.totalRevenue/100).toLocaleString()}</td></tr>
+                        <tr style="color:#16a34a;font-weight:600;"><td style="padding:6px 0;">Your Payout</td><td style="padding:6px 0;text-align:right;">${curr}${(booking.landlordPayout/100).toLocaleString()}</td></tr>
+                    </table>
+
+                    ${booking.notes ? `<h3 style="margin:0 0 8px;font-size:15px;color:#1e40af;">Notes</h3><p style="margin:0 0 16px;font-size:14px;color:#334155;">${booking.notes}</p>` : ''}
+
+                    <div style="margin-top:20px;padding-top:16px;border-top:1px solid #e2e8f0;font-size:12px;color:#94a3b8;">
+                        Sent by ${settings.managerName || 'StaySync'} ${settings.managerEmail ? '(' + settings.managerEmail + ')' : ''} ${settings.managerPhone ? '• ' + settings.managerPhone : ''}
+                    </div>
+                </div>
+            </div>`;
+        }
+
+        function buildPlainText(booking, property, settings, type, nights, curr) {
+            const labels = { 'new': 'NEW BOOKING', 'updated': 'BOOKING UPDATED', 'cancelled': 'BOOKING CANCELLED' };
+            return `${labels[type]}\n${'='.repeat(40)}\n\nProperty: ${property.name}\nAddress: ${property.address?.street || ''}, ${property.address?.city || ''} ${property.address?.state || ''}\n\nGuest: ${booking.guestName}\nGuests: ${booking.guestCount}\n${booking.guestEmail ? 'Email: '+booking.guestEmail+'\n' : ''}${booking.guestPhone ? 'Phone: '+booking.guestPhone+'\n' : ''}\nCheck-in: ${booking.checkIn}\nCheck-out: ${booking.checkOut}\nNights: ${nights}\n\nFINANCIAL BREAKDOWN\n${'-'.repeat(30)}\nNightly rate: ${curr}${(booking.nightlyRate/100).toLocaleString()} x ${nights} = ${curr}${((booking.nightlyRate*nights)/100).toLocaleString()}\nCleaning fee: ${curr}${(booking.cleaningFee/100).toLocaleString()}\n${booking.serviceFee ? 'Service fee: '+curr+(booking.serviceFee/100).toLocaleString()+'\n' : ''}${booking.taxAmount ? 'Tax: '+curr+(booking.taxAmount/100).toLocaleString()+'\n' : ''}Total: ${curr}${(booking.totalRevenue/100).toLocaleString()}\nYour Payout: ${curr}${(booking.landlordPayout/100).toLocaleString()}\n${booking.notes ? '\nNotes: '+booking.notes+'\n' : ''}\n--\n${settings.managerName || 'StaySync'} ${settings.managerEmail ? '('+settings.managerEmail+')' : ''} ${settings.managerPhone || ''}`;
+        }
+
+        // Retry queued emails when back online
+        window.addEventListener('online', async () => {
+            const queue = JSON.parse(localStorage.getItem('staysync_email_queue') || '[]');
+            if (!queue.length) return;
+            const settings = DB.getSetting();
+            const isHosted = window.location.hostname !== 'localhost' && !window.location.protocol.startsWith('file');
+            if (!isHosted && !settings.resendApiKey) return;
+            const remaining = [];
+            for (const item of queue) {
+                try {
+                    const endpoint = isHosted ? '/api/send-email' : 'https://api.resend.com/emails';
+                    const payload = { from: settings.fromEmail || 'StaySync <onboarding@resend.dev>', to: [item.landlord.email], subject: item.subject, html: item.body };
+                    const headers = isHosted ? { 'Content-Type': 'application/json' } : { 'Authorization': `Bearer ${settings.resendApiKey}`, 'Content-Type': 'application/json' };
+                    const res = await fetch(endpoint, { method: 'POST', headers, body: JSON.stringify(payload) });
+                    if (res.ok) UI.toast(`Queued email sent to ${item.landlord.name}`, 'success');
+                    else remaining.push(item);
+                } catch { remaining.push(item); }
+            }
+            localStorage.setItem('staysync_email_queue', JSON.stringify(remaining));
+        });
+
+        function renderBookingPropertySelect() {
+            const properties = DB.getList('properties');
+            let html = '<option value="">Select Property</option>';
+            html += properties.map(p => `<option value="${p.id}">${p.name}</option>`).join('');
+            document.getElementById('bookingProperty').innerHTML = html;
+            document.getElementById('propertyFilterSelect').innerHTML = '<option value="">All Properties</option>' + properties.map(p => `<option value="${p.id}">${p.name}</option>`).join('');
+        }
+
+        function updateBookingCalculations() {
+            const propertyId = document.getElementById('bookingProperty').value;
+            if (!propertyId) return;
+
+            const prop = DB.get('properties', propertyId);
+            const checkIn = document.getElementById('bookingCheckIn').value;
+            const checkOut = document.getElementById('bookingCheckOut').value;
+            const serviceFee = Math.round(parseFloat(document.getElementById('bookingServiceFee').value || 0) * 100);
+            const taxAmount = Math.round(parseFloat(document.getElementById('bookingTaxAmount').value || 0) * 100);
+
+            const checkInDate = new Date(checkIn);
+            const checkOutDate = new Date(checkOut);
+            const nights = Math.max(1, Math.ceil((checkOutDate - checkInDate) / (1000 * 60 * 60 * 24)));
+
+            const roomTotal = prop.nightlyRate * nights;
+            const subtotal = roomTotal + prop.cleaningFee;
+            const total = subtotal + serviceFee + taxAmount;
+
+            const landlord = prop.landlordIds?.length ? DB.get('landlords', prop.landlordIds[0]) : null;
+            const payoutPercent = landlord?.payoutPercent || 100;
+            const landlordPayout = Math.round(total * payoutPercent / 100);
+            const managementFee = total - landlordPayout;
+
+            document.getElementById('fNightlyRate').textContent = UI.formatCurrency(prop.nightlyRate);
+            document.getElementById('fNights').textContent = nights;
+            document.getElementById('fRoomTotal').textContent = UI.formatCurrency(roomTotal);
+            document.getElementById('fCleaningFee').textContent = UI.formatCurrency(prop.cleaningFee);
+            document.getElementById('fTotalRevenue').textContent = UI.formatCurrency(total);
+            document.getElementById('fLandlordPayout').textContent = UI.formatCurrency(landlordPayout);
+            document.getElementById('fManagementFee').textContent = UI.formatCurrency(managementFee);
+
+            const bookings = DB.getList('bookings');
+            const conflicts = bookings.filter(b => {
+                if (b.id === document.getElementById('bookingForm').dataset.id) return false;
+                if (b.propertyId !== propertyId || b.status === 'Cancelled') return false;
+                return (checkIn < b.checkOut && checkOut > b.checkIn);
+            });
+
+            document.getElementById('bookingConflict').style.display = conflicts.length ? 'flex' : 'none';
+        }
+
+        function editBooking(bookingId) {
+            const booking = DB.get('bookings', bookingId);
+            document.getElementById('bookingModalTitle').textContent = 'Edit Booking';
+            document.getElementById('bookingProperty').value = booking.propertyId;
+            document.getElementById('bookingCheckIn').value = booking.checkIn;
+            document.getElementById('bookingCheckOut').value = booking.checkOut;
+            document.getElementById('bookingGuestName').value = booking.guestName;
+            document.getElementById('bookingGuestEmail').value = booking.guestEmail;
+            document.getElementById('bookingGuestPhone').value = booking.guestPhone;
+            document.getElementById('bookingGuestCount').value = booking.guestCount;
+            document.getElementById('bookingServiceFee').value = booking.serviceFee / 100;
+            document.getElementById('bookingTaxAmount').value = booking.taxAmount / 100;
+            document.getElementById('bookingStatus').value = booking.status;
+            document.getElementById('bookingNotes').value = booking.notes;
+            document.getElementById('bookingForm').dataset.id = bookingId;
+            updateBookingCalculations();
+            UI.showModal('bookingModal');
+        }
+
+        // ===== SETTINGS =====
+        function initSettings() {
+            document.querySelectorAll('.tab-button').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const tab = btn.dataset.tab;
+                    document.querySelectorAll('.tab-button').forEach(b => b.classList.remove('active'));
+                    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                    btn.classList.add('active');
+                    document.getElementById(tab + 'Tab').classList.add('active');
+                });
+            });
+
+            document.getElementById('profileForm').addEventListener('submit', (e) => {
+                e.preventDefault();
+                DB.saveSetting({
+                    managerName: document.getElementById('managerName').value,
+                    managerEmail: document.getElementById('managerEmail').value,
+                    managerPhone: document.getElementById('managerPhone').value
+                });
+            });
+
+            document.getElementById('emailForm').addEventListener('submit', (e) => {
+                e.preventDefault();
+                DB.saveSetting({
+                    resendApiKey: document.getElementById('resendApiKey').value,
+                    fromEmail: document.getElementById('fromEmail').value,
+                    emailSignature: document.getElementById('emailSignature').value
+                });
+            });
+
+            document.getElementById('generalForm').addEventListener('submit', (e) => {
+                e.preventDefault();
+                DB.saveSetting({
+                    defaultCheckIn: document.getElementById('defaultCheckIn').value,
+                    defaultCheckOut: document.getElementById('defaultCheckOut').value,
+                    currency: document.getElementById('currencySelect').value
+                });
+                updateCurrencySymbols();
+            });
+
+            document.querySelectorAll('[data-theme]').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    document.querySelectorAll('[data-theme]').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    const theme = btn.dataset.theme;
+                    DB.saveSetting({ theme });
+                    applyTheme(theme);
+                });
+            });
+
+            document.getElementById('exportDataBtn').addEventListener('click', () => {
+                const data = {
+                    properties: DB.getAll('properties'),
+                    landlords: DB.getAll('landlords'),
+                    bookings: DB.getAll('bookings'),
+                    activity: DB.getAll('activity'),
+                    settings: DB.getSetting()
+                };
+                const json = JSON.stringify(data, null, 2);
+                const blob = new Blob([json], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `staysync-export-${new Date().toISOString().split('T')[0]}.json`;
+                a.click();
+                URL.revokeObjectURL(url);
+            });
+
+            document.getElementById('importDataBtn').addEventListener('click', () => {
+                const file = document.getElementById('importDataFile').files[0];
+                if (!file) return;
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    try {
+                        const data = JSON.parse(e.target.result);
+                        if (data.properties) localStorage.setItem('properties', JSON.stringify(data.properties));
+                        if (data.landlords) localStorage.setItem('landlords', JSON.stringify(data.landlords));
+                        if (data.bookings) localStorage.setItem('bookings', JSON.stringify(data.bookings));
+                        if (data.activity) localStorage.setItem('activity', JSON.stringify(data.activity));
+                        alert('Data imported successfully');
+                        location.reload();
+                    } catch (err) {
+                        alert('Invalid file format');
+                    }
+                };
+                reader.readAsText(file);
+            });
+
+            document.getElementById('clearDataBtn').addEventListener('click', () => {
+                const password = prompt('Enter your password to confirm data deletion:');
+                if (!password) return;
+
+                const settings = DB.getSetting();
+                Auth.hashPassword(password, settings.passwordSalt.match(/.{1,2}/g).map(b => parseInt(b, 16))).then(result => {
+                    if (result.hash === settings.passwordHash) {
+                        localStorage.clear();
+                        sessionStorage.clear();
+                        location.reload();
+                    } else {
+                        alert('Incorrect password');
+                    }
+                });
+            });
+
+            document.getElementById('logoutBtn').addEventListener('click', () => {
+                Auth.logout();
+            });
+
+            loadSettings();
+        }
+
+        function loadSettings() {
+            const settings = DB.getSetting();
+            document.getElementById('managerName').value = settings.managerName || '';
+            document.getElementById('managerEmail').value = settings.managerEmail || '';
+            document.getElementById('managerPhone').value = settings.managerPhone || '';
+            document.getElementById('resendApiKey').value = settings.resendApiKey || '';
+            document.getElementById('fromEmail').value = settings.fromEmail || '';
+            document.getElementById('emailSignature').value = settings.emailSignature || '';
+            document.getElementById('defaultCheckIn').value = settings.defaultCheckIn || '14:00';
+            document.getElementById('defaultCheckOut').value = settings.defaultCheckOut || '11:00';
+            document.getElementById('currencySelect').value = settings.currency || 'NGN';
+            document.querySelectorAll('[data-theme]').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.theme === (settings.theme || 'auto'));
+            });
+        }
+
+        function updateCurrencySymbols() {
+            const settings = DB.getSetting();
+            const symbol = { NGN: '₦', USD: '$', EUR: '€', GBP: '£' }[settings.currency || 'NGN'] || '₦';
+            document.querySelectorAll('[id^="currencySymbol"], [id^="f"]').forEach(el => {
+                if (el.id.startsWith('currencySymbol')) el.textContent = symbol;
+            });
+        }
+
+        function applyTheme(theme) {
+            const root = document.documentElement;
+            if (theme === 'dark') {
+                root.setAttribute('data-theme', 'dark');
+                root.style.colorScheme = 'dark';
+                document.querySelector('meta[name="theme-color"]')?.setAttribute('content', '#0f172a');
+            } else if (theme === 'light') {
+                root.setAttribute('data-theme', 'light');
+                root.style.colorScheme = 'light';
+                document.querySelector('meta[name="theme-color"]')?.setAttribute('content', '#1e40af');
+            } else {
+                root.removeAttribute('data-theme');
+                root.style.colorScheme = '';
+                const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+                document.querySelector('meta[name="theme-color"]')?.setAttribute('content', isDark ? '#0f172a' : '#1e40af');
+            }
+        }
+
+        // ===== AUTH =====
+        document.getElementById('authForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const username = document.getElementById('authUsername').value;
+            const password = document.getElementById('authPassword').value;
+            try {
+                const result = await Auth.login(username, password);
+                if (result.error) {
+                    document.getElementById('authErrorText').textContent = result.error;
+                    document.getElementById('authError').style.display = 'flex';
+                } else {
+                    document.getElementById('authError').style.display = 'none';
+                    document.getElementById('authModal').classList.remove('show');
+                    init();
+                }
+            } catch (err) {
+                document.getElementById('authErrorText').textContent = 'Login failed: ' + (err.message || 'Unknown error. Try using HTTPS.');
+                document.getElementById('authError').style.display = 'flex';
+            }
+        });
+
+        document.getElementById('switchToSignup').addEventListener('click', () => {
+            document.getElementById('authForm').style.display = 'none';
+            document.getElementById('signupForm').style.display = 'block';
+        });
+
+        document.getElementById('switchToLogin').addEventListener('click', () => {
+            document.getElementById('authForm').style.display = 'block';
+            document.getElementById('signupForm').style.display = 'none';
+        });
+
+        document.getElementById('signupFormElement').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const username = document.getElementById('signupUsername').value;
+            const password = document.getElementById('signupPassword').value;
+            const confirmPw = document.getElementById('signupPasswordConfirm').value;
+
+            if (password !== confirmPw) {
+                document.getElementById('authErrorText').textContent = 'Passwords do not match';
+                document.getElementById('authError').style.display = 'flex';
+                return;
+            }
+
+            try {
+                const result = await Auth.signup(username, password);
+                if (result.error) {
+                    document.getElementById('authErrorText').textContent = result.error;
+                    document.getElementById('authError').style.display = 'flex';
+                } else {
+                    document.getElementById('authError').style.display = 'none';
+                    showSuccessBanner('Account created successfully! You can now log in.');
+                    setTimeout(() => {
+                        document.getElementById('authModal').classList.remove('show');
+                        init();
+                    }, 2000);
+                }
+            } catch (err) {
+                document.getElementById('authErrorText').textContent = 'Signup failed: ' + (err.message || 'Unknown error. Try using HTTPS.');
+                document.getElementById('authError').style.display = 'flex';
+            }
+        });
+
+        // ===== UTILITIES =====
+        function debounce(fn, ms) {
+            let timeout;
+            return function(...args) {
+                clearTimeout(timeout);
+                timeout = setTimeout(() => fn.apply(this, args), ms);
+            };
+        }
+
+        function getPropertyColor(index) {
+            const colors = ['#2563eb', '#dc2626', '#16a34a', '#d97706', '#7c3aed', '#db2777', '#0891b2', '#65a30d', '#ea580c', '#6366f1'];
+            return colors[index % colors.length];
+        }
+
+        function checkOnline() {
+            const banner = document.getElementById('offlineBanner');
+            window.addEventListener('online', () => banner.classList.remove('show'));
+            window.addEventListener('offline', () => banner.classList.add('show'));
+            if (!navigator.onLine) banner.classList.add('show');
+        }
+
+        // ===== SERVICE WORKER =====
+        if ('serviceWorker' in navigator) {
+            const swCode = `
+                self.addEventListener('install', e => e.waitUntil(caches.open('staysync-v1').then(c => c.addAll(['/']))));
+                self.addEventListener('activate', e => e.waitUntil(caches.keys().then(keys => Promise.all(keys.map(k => k !== 'staysync-v1' ? caches.delete(k) : null)))));
+                self.addEventListener('fetch', e => {
+                    if (e.request.method !== 'GET') return;
+                    e.respondWith(caches.match(e.request).then(r => r || fetch(e.request).then(r => caches.open('staysync-v1').then(c => { c.put(e.request, r.clone()); return r; }))).catch(() => new Response('Offline')));
+                });
+            `;
+            const blob = new Blob([swCode], { type: 'application/javascript' });
+            const swUrl = URL.createObjectURL(blob);
+            navigator.serviceWorker.register(swUrl).catch(() => {});
+        }
+
+        // ===== INIT =====
+        initAuth();
+    
+        // ===== NEW FEATURES =====
+        
+        // Success Banner
+        function showSuccessBanner(message = "Account created successfully! You can now log in.") {
+            const banner = document.getElementById('successBanner');
+            document.getElementById('successBannerText').textContent = message;
+            banner.classList.add('show');
+            setTimeout(() => {
+                banner.classList.remove('show');
+            }, 3000);
+        }
+
+        // Instruction Banners
+        const app = {
+            dismissInstruction(screenName) {
+                const key = `instruction_dismissed_${screenName}`;
+                localStorage.setItem(key, 'true');
+                const banner = document.getElementById(`${screenName}Instruction`);
+                if (banner) banner.classList.add('hidden');
+            },
+            
+            showInstruction(screenName) {
+                const banner = document.getElementById(`${screenName}Instruction`);
+                if (banner) banner.classList.remove('hidden');
+            }
+        };
+
+        // Initialize instruction banners
+        function initInstructionBanners() {
+            const screens = ['dashboard', 'calendar', 'properties', 'landlords', 'messages', 'settings'];
+            screens.forEach(screen => {
+                const key = `instruction_dismissed_${screen}`;
+                const banner = document.getElementById(`${screen}Instruction`);
+                if (banner && localStorage.getItem(key)) {
+                    banner.classList.add('hidden');
+                }
+            });
+        }
+
+        // FAB visibility
+        function updateFabVisibility() {
+            const currentPage = document.querySelector('.page.active');
+            const pageId = currentPage ? currentPage.id : null;
+            
+            document.getElementById('addPropertyFab').style.display = pageId === 'properties' ? 'flex' : 'none';
+            document.getElementById('addLandlordFab').style.display = pageId === 'landlords' ? 'flex' : 'none';
+        }
+
+        // Image upload for properties
+        function initPropertyImageUpload() {
+            const imagePreview = document.getElementById('propertyImagePreview');
+            const imageInput = document.getElementById('propertyImage');
+            const imageData = document.getElementById('propertyImageData');
+            
+            if (imagePreview) {
+                imagePreview.addEventListener('click', () => imageInput.click());
+            }
+            
+            if (imageInput) {
+                imageInput.addEventListener('change', (e) => {
+                    const file = e.target.files[0];
+                    if (file) {
+                        // Check file size (recommend under 500KB)
+                        if (file.size > 500000) {
+                            alert('Image is larger than 500KB. Please use a smaller image to avoid localStorage limits.');
+                            return;
+                        }
+                        
+                        const reader = new FileReader();
+                        reader.onload = (event) => {
+                            const base64 = event.target.result;
+                            imageData.value = base64;
+                            
+                            // Show preview
+                            imagePreview.innerHTML = `<img src="${base64}" alt="Property image" style="width: 100%; height: 100%; object-fit: cover;">`;
+                        };
+                        reader.readAsDataURL(file);
+                    }
+                });
+            }
+        }
+
+        // Display property image in previews
+        function getPropertyImagePreview(propertyId) {
+            const property = DB.get('properties', propertyId);
+            if (property && property.image) {
+                return `<img src="${property.image}" style="width: 100%; height: 150px; object-fit: cover; border-radius: 8px; margin-bottom: 12px;">`;
+            }
+            return '';
+        }
+
+        // API Status Display
+        function displayApiStatus() {
+            const settings = DB.getSetting();
+            const statusContainer = document.getElementById('apiStatusContainer');
+            
+            if (statusContainer) {
+                const hasApiKey = settings.resendApiKey ? true : false;
+                statusContainer.innerHTML = `<div class="api-status ${hasApiKey ? 'configured' : 'not-configured'}">
+                    <svg viewBox="0 0 24 24" fill="currentColor">
+                        ${hasApiKey 
+                            ? '<path d="M20.854 5.354a1 1 0 0 0-1.414-1.414l-8.485 8.485-3.889-3.889a1 1 0 0 0-1.414 1.414l4.596 4.596a1 1 0 0 0 1.414 0l9.192-9.192z"/>' 
+                            : '<circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line>'}
+                    </svg>
+                    <span>${hasApiKey ? 'API Key Configured ✓' : 'API Key Not Configured'}</span>
+                </div>`;
+            }
+        }
+
+        // Test email
+        function testEmail() {
+            const settings = DB.getSetting();
+            if (!settings.managerEmail) {
+                alert('Please set your email in profile first.');
+                return;
+            }
+            if (!settings.resendApiKey) {
+                alert('Please set your Resend API key first.');
+                return;
+            }
+            
+            // Send test email via Resend
+            const from = settings.fromEmail || 'noreply@staysync.app';
+            const to = settings.managerEmail;
+            const subject = 'StaySync Test Email';
+            const html = `<p>This is a test email from StaySync. If you received this, your email notifications are working correctly!</p>`;
+            
+            sendEmailViaResend(from, to, subject, html, settings.resendApiKey).then(result => {
+                if (result.success) {
+                    alert('Test email sent successfully!');
+                } else {
+                    alert('Failed to send test email: ' + result.error);
+                }
+            });
+        }
+
+        // Send email via Resend
+        async function sendEmailViaResend(from, to, subject, html, apiKey) {
+            try {
+                const response = await fetch('https://api.resend.com/emails', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${apiKey}`,
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        from: from,
+                        to: to,
+                        subject: subject,
+                        html: html
+                    })
+                });
+                
+                if (response.ok) {
+                    return { success: true };
+                } else {
+                    const error = await response.json();
+                    return { success: false, error: error.message || 'Unknown error' };
+                }
+            } catch (error) {
+                return { success: false, error: error.message };
+            }
+        }
+
+        // Message templates
+        const messageTemplates = {
+            new_booking: {
+                subject: 'New Booking - {{property_name}}',
+                body: 'Dear {{landlord_name}},\n\nYou have a new booking:\n\nProperty: {{property_name}}\nGuest: {{guest_name}}\nCheck-in: {{check_in}}\nCheck-out: {{check_out}}\nTotal Revenue: {{total}}\nYour Payout: {{payout}}\n\nBest regards,\nManagement'
+            },
+            payment_reminder: {
+                subject: 'Payment Reminder - {{property_name}}',
+                body: 'Dear {{landlord_name}},\n\nThis is a reminder about the payment for recent bookings. Please check your account for details.\n\nBest regards,\nManagement'
+            },
+            checkin: {
+                subject: 'Check-in Instructions - {{property_name}}',
+                body: 'Dear {{guest_name}},\n\nWelcome! Here are your check-in instructions for {{property_name}}:\n\nCheck-in time: {{check_in}}\nProperty address: {{property_name}}\n\nPlease contact us if you have any questions.\n\nBest regards,\nManagement'
+            },
+            checkout: {
+                subject: 'Check-out Reminder - {{property_name}}',
+                body: 'Dear {{guest_name}},\n\nPlease remember to check out of {{property_name}} by {{check_out}} time.\n\nThank you for your stay!\n\nBest regards,\nManagement'
+            },
+            maintenance: {
+                subject: 'Maintenance Notice - {{property_name}}',
+                body: 'Dear {{landlord_name}},\n\nPlease note that {{property_name}} will require maintenance. We will schedule this at your earliest convenience.\n\nBest regards,\nManagement'
+            }
+        };
+
+        // Preview template
+        function previewTemplate() {
+            const templateId = document.getElementById('templateSelect').value;
+            const subject = document.getElementById('msgSubject').value;
+            const body = document.getElementById('msgBody').value;
+            
+            const sampleData = {
+                guest_name: 'John Doe',
+                property_name: 'Ocean View Apartment',
+                check_in: '2024-05-01',
+                check_out: '2024-05-05',
+                total: '500,000',
+                payout: '450,000',
+                landlord_name: 'Property Owner'
+            };
+            
+            let previewSubject = subject;
+            let previewBody = body;
+            
+            Object.keys(sampleData).forEach(key => {
+                previewSubject = previewSubject.replace(`{{${key}}}`, sampleData[key]);
+                previewBody = previewBody.replace(`{{${key}}}`, sampleData[key]);
+            });
+            
+            const preview = `
+                <div class="template-preview">
+                    <div class="template-preview-subject"><strong>Subject:</strong> ${previewSubject}</div>
+                    <div class="template-preview-body">${previewBody}</div>
+                </div>
+            `;
+            
+            document.getElementById('templatePreviewArea').innerHTML = preview;
+        }
+
+        // Initialize message template handling
+        function initMessageTemplates() {
+            const templateSelect = document.getElementById('templateSelect');
+            if (templateSelect) {
+                templateSelect.addEventListener('change', (e) => {
+                    const template = messageTemplates[e.target.value];
+                    if (template) {
+                        document.getElementById('msgSubject').value = template.subject;
+                        document.getElementById('msgBody').value = template.body;
+                        document.getElementById('templatePreviewArea').innerHTML = '';
+                    }
+                });
+                
+                // Load default template
+                const template = messageTemplates['new_booking'];
+                document.getElementById('msgSubject').value = template.subject;
+                document.getElementById('msgBody').value = template.body;
+            }
+
+            const previewBtn = document.getElementById('previewTemplateBtn');
+            if (previewBtn) {
+                previewBtn.addEventListener('click', previewTemplate);
+            }
+
+            const recipientSelect = document.getElementById('msgRecipient');
+            if (recipientSelect) {
+                recipientSelect.addEventListener('change', (e) => {
+                    const specificDiv = document.getElementById('specificLandlordDiv');
+                    if (specificDiv) {
+                        specificDiv.style.display = e.target.value === 'specific' ? 'block' : 'none';
+                    }
+                });
+            }
+
+            const templateForm = document.getElementById('templateForm');
+            if (templateForm) {
+                templateForm.addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    sendMessage();
+                });
+            }
+        }
+
+        // Send message
+        function sendMessage() {
+            const subject = document.getElementById('msgSubject').value;
+            const body = document.getElementById('msgBody').value;
+            const recipient = document.getElementById('msgRecipient').value;
+            
+            let recipients = [];
+            if (recipient === 'all') {
+                recipients = DB.getList('landlords');
+            } else if (recipient === 'specific') {
+                const landlordId = document.getElementById('msgLandlord').value;
+                const landlord = DB.get('landlords', landlordId);
+                if (landlord) recipients = [landlord];
+            }
+            
+            if (recipients.length === 0) {
+                alert('Please select at least one recipient.');
+                return;
+            }
+            
+            // Save message history
+            const messageHistory = DB.getAll('messageHistory');
+            const settings = DB.getSetting();
+            
+            recipients.forEach(landlord => {
+                const msgId = crypto.randomUUID();
+                messageHistory[msgId] = {
+                    id: msgId,
+                    recipient: landlord.name,
+                    recipientEmail: landlord.email,
+                    subject: subject,
+                    body: body,
+                    sentAt: new Date().toISOString(),
+                    status: 'sent'
+                };
+            });
+            
+            localStorage.setItem('messageHistory', JSON.stringify(messageHistory));
+            
+            // Try to send via email if API key is set
+            if (settings.resendApiKey && settings.fromEmail) {
+                recipients.forEach(landlord => {
+                    sendEmailViaResend(
+                        settings.fromEmail,
+                        landlord.email,
+                        subject,
+                        body.replace(/\n/g, '<br>'),
+                        settings.resendApiKey
+                    );
+                });
+            }
+            
+            alert('Message sent to ' + recipients.length + ' recipient(s)!');
+            document.getElementById('templateForm').reset();
+            document.getElementById('templatePreviewArea').innerHTML = '';
+        }
+
+        // Render message history
+        function renderMessageHistory() {
+            const historyList = document.getElementById('messageHistoryList');
+            if (!historyList) return;
+            
+            const messages = DB.getList('messageHistory');
+            if (messages.length === 0) {
+                historyList.innerHTML = '<div class="empty-state"><p>No messages sent yet.</p></div>';
+                return;
+            }
+            
+            historyList.innerHTML = messages.slice().reverse().map(msg => `
+                <div class="message-item">
+                    <div class="message-item-header">
+                        <div class="message-item-recipient">${msg.recipient}</div>
+                        <div class="message-item-status ${msg.status}">${msg.status.toUpperCase()}</div>
+                    </div>
+                    <div class="message-item-subject">${msg.subject}</div>
+                    <div class="message-item-date">${new Date(msg.sentAt).toLocaleString()}</div>
+                </div>
+            `).join('');
+        }
+
+        // Populate landlords for multiple assignment in property form
+        function populateLandlordCheckboxes() {
+            const container = document.getElementById('landlordCheckboxes');
+            if (!container) return;
+            
+            const landlords = DB.getList('landlords');
+            container.innerHTML = landlords.map(landlord => `
+                <div class="checkbox-item">
+                    <input type="checkbox" id="landlord_${landlord.id}" value="${landlord.id}" name="landlords">
+                    <div class="checkbox-item-label">
+                        <div class="item-title">${landlord.name}</div>
+                        <div class="item-subtitle">${landlord.email}</div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Get selected landlords from property form
+        function getSelectedLandlords() {
+            const checkboxes = document.querySelectorAll('#landlordCheckboxes input[type="checkbox"]:checked');
+            return Array.from(checkboxes).map(cb => cb.value);
+        }
+
+        // Display WhatsApp button for landlords
+        function getWhatsAppButton(landlord) {
+            if (!landlord.phone) return '';
+            
+            const message = encodeURIComponent('Hello ' + landlord.name + ', this is from StaySync.');
+            return `<a href="https://wa.me/${landlord.phone.replace(/[^0-9]/g, '')}?text=${message}" target="_blank" class="btn-whatsapp btn-small">
+                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.67-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.076 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421-7.403h-.004a9.87 9.87 0 00-5.031 1.378c-3.055 2.364-3.905 6.75-1.907 10.93 1.9 3.968 6.287 5.556 10.254 3.656 3.968-1.9 5.556-6.287 3.656-10.254-1.9-3.968-6.287-5.556-10.254-3.656l.004.001z"></path></svg>
+            </a>`;
+        }
+
+    </script>
 </body>
 </html>
+            const testEmailBtn = document.getElementById('testEmailBtn');
+            if (testEmailBtn) {
+                testEmailBtn.addEventListener('click', testEmail);
+            }
+
+            const whatsappEnabled = document.getElementById('whatsappEnabled');
+            if (whatsappEnabled) {
+                whatsappEnabled.checked = DB.getSetting().whatsappEnabled || false;
+                whatsappEnabled.addEventListener('change', (e) => {
+                    const settings = DB.getSetting();
+                    settings.whatsappEnabled = e.target.checked;
+                    DB.saveSetting(settings);
+                });
+            }
+
+            // Tab switching
+            document.querySelectorAll('.tab-button').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    document.querySelectorAll('.tab-button').forEach(b => b.classList.remove('active'));
+                    document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+                    btn.classList.add('active');
+                    const tabId = btn.dataset.tab + 'Tab';
+                    document.getElementById(tabId).classList.add('active');
+                    if (btn.dataset.tab === 'email') displayApiStatus();
+                });
+            });
+
