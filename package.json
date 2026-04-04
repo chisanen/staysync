@@ -6,6 +6,8 @@
     "dev": "vercel dev"
   },
   "dependencies": {
-    "@neondatabase/serverless": "^1.0.2"
+    "@neondatabase/serverless": "^1.0.2",
+    "@vercel/blob": "^2.3.3",
+    "web-push": "^3.6.7"
   }
 }

@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="theme-color" content="#1e40af">
+    <link rel="manifest" href="/manifest.json">
+    <link rel="apple-touch-icon" href="/icon-192.png">
     <title>Phiyalistings - Booking Management</title>
     <style>
         * {
@@ -1524,6 +1526,12 @@
         <span id="successBannerText">Account created successfully! You can now log in.</span>
     </div>
 
+    <div id="pwaInstallBanner" style="display:none;position:fixed;bottom:80px;left:12px;right:12px;background:var(--primary);color:white;padding:14px 16px;border-radius:12px;z-index:200;align-items:center;gap:12px;box-shadow:0 4px 20px rgba(0,0,0,0.2);">
+        <div style="flex:1;font-size:14px;font-weight:600;">Install Phiyalistings for faster access</div>
+        <button onclick="installPWA()" style="background:white;color:var(--primary);padding:8px 16px;border-radius:8px;font-weight:600;font-size:13px;min-height:36px;border:none;cursor:pointer;">Install</button>
+        <button onclick="dismissPWA()" style="background:none;color:white;border:none;font-size:18px;cursor:pointer;padding:4px;min-height:auto;">&#10005;</button>
+    </div>
+
     <div class="app-container">
         <!-- DESKTOP SIDEBAR -->
         <div class="sidebar" id="sidebar">
@@ -1552,6 +1560,10 @@
                 <button data-page="messages">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22 6 12 13 2 6"></polyline></svg>
                     Messages
+                </button>
+                <button data-page="reports">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 20V10"></path><path d="M12 20V4"></path><path d="M6 20v-6"></path></svg>
+                    Reports
                 </button>
                 <button data-page="settings">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M12 1v6m0 6v6M4.22 4.22l4.24 4.24m6.08 0l4.24-4.24M1 12h6m6 0h6m-1.78 7.78l-4.24-4.24m-6.08 0l-4.24 4.24"></path></svg>
@@ -1618,6 +1630,15 @@
                             <div class="progress-fill" id="occupancyFill" style="width: 0%"></div>
                         </div>
                         <div style="font-size: 12px; color: var(--text-secondary); text-align: right;" id="occupancyLabel">0%</div>
+                    </div>
+
+                    <div class="card">
+                        <div style="font-weight: 600; margin-bottom: 12px;">Revenue Trend (6 Months)</div>
+                        <canvas id="revenueChart" height="180" style="width:100%;"></canvas>
+                    </div>
+                    <div class="card">
+                        <div style="font-weight: 600; margin-bottom: 12px;">Occupancy by Property</div>
+                        <div id="occupancyByProperty"></div>
                     </div>
 
                     <!-- UPCOMING BOOKINGS -->
@@ -1771,6 +1792,8 @@
                     <div class="filter-buttons">
                         <button class="filter-btn active" data-filter="all">All</button>
                         <button class="filter-btn" data-filter="repeat">Repeat</button>
+                        <button class="filter-btn" data-filter="flagged">Flagged</button>
+                        <button class="filter-btn" data-filter="favorites">Favorites</button>
                     </div>
                     <div id="guestsList">
                         <!-- Guests rendered here -->
@@ -1797,6 +1820,7 @@
                         <button class="tab-button" data-tab="email">Email</button>
                         <button class="tab-button" data-tab="general">General</button>
                         <button class="tab-button" data-tab="data">Data</button>
+                        <button class="tab-button" data-tab="team">Team</button>
                     </div>
 
                     <!-- PROFILE TAB -->
@@ -1935,6 +1959,34 @@
                                 </button>
                             </div>
                         </div>
+                    </div>
+
+                    <div id="teamTab" class="tab-content">
+                        <div class="card">
+                            <h3 style="font-weight:600;margin-bottom:12px;">Invite Team Member</h3>
+                            <form id="teamInviteForm">
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label>Username</label>
+                                        <input type="text" id="inviteUsername" required placeholder="Their account username">
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Role</label>
+                                        <select id="inviteRole">
+                                            <option value="manager">Manager</option>
+                                            <option value="staff">Staff</option>
+                                            <option value="viewer">Viewer</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <button type="submit" class="btn-primary" style="width:100%;">Send Invite</button>
+                            </form>
+                        </div>
+                        <div class="card" style="margin-top:16px;">
+                            <h3 style="font-weight:600;margin-bottom:12px;">Team Members</h3>
+                            <div id="teamMembersList" style="font-size:13px;color:var(--text-secondary);">Loading...</div>
+                        </div>
+                    </div>
 
                         <div class="card" style="margin-top: 20px;">
                             <h3 style="font-weight: 600; margin-bottom: 12px;">About Phiyalistings</h3>
@@ -1949,7 +2001,6 @@
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
                             Logout
                         </button>
-                    </div>
                 </div>
             </div>
 
@@ -2038,6 +2089,31 @@
                             <!-- Populated by JS -->
                         </div>
                     </div>
+                </div>
+            </div>
+
+            <!-- REPORTS PAGE -->
+            <div id="reports" class="page">
+                <div class="page-header">
+                    <h1>Reports</h1>
+                </div>
+                <div class="page-content">
+                    <div class="form-group" style="max-width:200px;">
+                        <label>Month</label>
+                        <input type="month" id="reportMonth" value="">
+                    </div>
+                    <div class="card">
+                        <div style="font-weight: 600; margin-bottom: 12px;">Revenue by Property</div>
+                        <div id="revenueReport" style="font-size:13px;color:var(--text-secondary);">Select a month</div>
+                    </div>
+                    <div class="card">
+                        <div style="font-weight: 600; margin-bottom: 12px;">Payouts by Landlord</div>
+                        <div id="payoutReport" style="font-size:13px;color:var(--text-secondary);">Select a month</div>
+                    </div>
+                    <button class="btn-secondary" id="downloadReportCSV" style="width:100%;margin-top:12px;">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                        Download CSV
+                    </button>
                 </div>
             </div>
         </div>
@@ -2187,6 +2263,33 @@
                 <div class="form-group full">
                     <label>Notes</label>
                     <textarea id="guestNotes" placeholder="Special requests, preferences, etc."></textarea>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Rating</label>
+                        <div id="guestRatingStars" style="display:flex;gap:4px;cursor:pointer;">
+                            <span data-star="1" style="font-size:24px;color:var(--border);">&#9733;</span>
+                            <span data-star="2" style="font-size:24px;color:var(--border);">&#9733;</span>
+                            <span data-star="3" style="font-size:24px;color:var(--border);">&#9733;</span>
+                            <span data-star="4" style="font-size:24px;color:var(--border);">&#9733;</span>
+                            <span data-star="5" style="font-size:24px;color:var(--border);">&#9733;</span>
+                        </div>
+                        <input type="hidden" id="guestRating" value="0">
+                    </div>
+                    <div class="form-group">
+                        <label>Tags</label>
+                        <div style="display:flex;gap:8px;">
+                            <label style="display:flex;align-items:center;gap:4px;font-size:13px;cursor:pointer;">
+                                <input type="checkbox" id="guestFavorite" style="width:18px;height:18px;">
+                                Favorite
+                            </label>
+                            <label style="display:flex;align-items:center;gap:4px;font-size:13px;cursor:pointer;">
+                                <input type="checkbox" id="guestFlagged" style="width:18px;height:18px;">
+                                Flagged
+                            </label>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="button-group">
@@ -2376,6 +2479,15 @@
                     <textarea id="llNotes" placeholder="Additional notes..."></textarea>
                 </div>
 
+                <div class="form-group" id="portalShareDiv" style="display:none;background:var(--bg);padding:12px;border-radius:8px;">
+                    <label>Landlord Portal</label>
+                    <div style="display:flex;gap:8px;">
+                        <button type="button" class="btn-secondary btn-small" onclick="generatePortalLink()">Generate Link</button>
+                        <input type="text" id="portalLinkInput" readonly style="flex:1;font-size:12px;" placeholder="Click Generate to create link">
+                        <button type="button" class="btn-small" onclick="navigator.clipboard.writeText(document.getElementById('portalLinkInput').value);UI.toast('Copied!','success')">Copy</button>
+                    </div>
+                </div>
+
                 <div class="button-group">
                     <button type="submit" class="btn-primary">Save Landlord</button>
                     <button type="button" class="btn-secondary" data-modal="landlordModal">Cancel</button>
@@ -2522,6 +2634,7 @@
                 <div class="button-group">
                     <button type="submit" class="btn-primary">Save Booking</button>
                     <button type="button" class="btn-secondary" data-modal="bookingModal">Cancel</button>
+                    <button type="button" class="btn-secondary btn-small" id="bookingReceiptBtn" style="display:none;" onclick="openReceipt()">Receipt</button>
                     <button type="button" class="btn-danger btn-small" id="deleteBookingBtn" style="display:none;" onclick="deleteBooking()">Delete</button>
                 </div>
             </form>
@@ -2617,53 +2730,128 @@
             }
         };
 
-        // ===== DATABASE =====
+        // ===== DATABASE (Server-backed with local cache) =====
         const DB = {
-            getAll(key) {
+            _cache: {},
+
+            _keyToApi: {
+                properties: 'properties',
+                landlords: 'landlords',
+                bookings: 'bookings',
+                staysync_guests: 'guests',
+                activity: 'activity',
+                messageHistory: 'messages'
+            },
+
+            async init() {
                 try {
-                    return JSON.parse(localStorage.getItem(key) || '{}');
-                } catch {
-                    return {};
+                    const res = await fetch('/api/data/all', { credentials: 'include' });
+                    if (res.ok) {
+                        const data = await res.json();
+                        this._cache = data;
+                        // Write to localStorage as backup
+                        for (const key of Object.keys(data)) {
+                            if (key !== 'settings') {
+                                localStorage.setItem(key, JSON.stringify(data[key]));
+                            } else {
+                                localStorage.setItem('settings', JSON.stringify(data.settings));
+                            }
+                        }
+                    } else {
+                        this._loadFromLocalStorage();
+                    }
+                } catch (e) {
+                    this._loadFromLocalStorage();
                 }
             },
 
-            get(key, id) {
-                const all = this.getAll(key);
-                return all[id];
+            _loadFromLocalStorage() {
+                const keys = ['properties', 'landlords', 'bookings', 'staysync_guests', 'activity', 'messageHistory'];
+                for (const key of keys) {
+                    try {
+                        this._cache[key] = JSON.parse(localStorage.getItem(key) || '{}');
+                    } catch { this._cache[key] = {}; }
+                }
+                try {
+                    this._cache.settings = JSON.parse(localStorage.getItem('settings') || '{}');
+                } catch { this._cache.settings = {}; }
             },
 
-            save(key, id, data) {
-                const all = this.getAll(key);
-                all[id] = { ...data, id, updatedAt: new Date().toISOString() };
-                localStorage.setItem(key, JSON.stringify(all));
-                ActivityLog.add(key === 'properties' ? 'Property' : key === 'landlords' ? 'Landlord' : 'Booking', `${data.name || data.guestName || 'Item'} saved`, id);
-                return all[id];
-            },
-
-            delete(key, id) {
-                const all = this.getAll(key);
-                delete all[id];
-                localStorage.setItem(key, JSON.stringify(all));
-                return true;
+            getAll(key) {
+                return this._cache[key] || {};
             },
 
             getList(key) {
-                const all = this.getAll(key);
-                return Object.values(all);
+                return Object.values(this.getAll(key));
+            },
+
+            get(key, id) {
+                return this.getAll(key)[id];
+            },
+
+            save(key, id, data) {
+                if (!this._cache[key]) this._cache[key] = {};
+                const record = { ...data, id, updatedAt: new Date().toISOString() };
+                const isNew = !this._cache[key][id];
+                this._cache[key][id] = record;
+                // Write to localStorage as backup
+                localStorage.setItem(key, JSON.stringify(this._cache[key]));
+
+                // Sync to server asynchronously
+                const apiKey = this._keyToApi[key];
+                if (apiKey) {
+                    const url = isNew ? `/api/${apiKey}` : `/api/${apiKey}/${id}`;
+                    const method = isNew ? 'POST' : 'PUT';
+                    fetch(url, {
+                        method,
+                        headers: { 'Content-Type': 'application/json' },
+                        credentials: 'include',
+                        body: JSON.stringify(record)
+                    }).catch(() => {
+                        UI.toast('Failed to sync to server. Changes saved locally.', 'error');
+                    });
+                }
+
+                ActivityLog.add(key === 'properties' ? 'Property' : key === 'landlords' ? 'Landlord' : 'Booking', `${data.name || data.guestName || 'Item'} saved`, id);
+                return record;
+            },
+
+            delete(key, id) {
+                if (this._cache[key]) {
+                    delete this._cache[key][id];
+                    localStorage.setItem(key, JSON.stringify(this._cache[key]));
+                }
+                // Sync to server
+                const apiKey = this._keyToApi[key];
+                if (apiKey) {
+                    fetch(`/api/${apiKey}/${id}`, {
+                        method: 'DELETE',
+                        credentials: 'include'
+                    }).catch(() => {
+                        UI.toast('Failed to delete from server.', 'error');
+                    });
+                }
+                return true;
             },
 
             getSetting() {
-                try {
-                    return JSON.parse(localStorage.getItem('settings') || '{}');
-                } catch {
-                    return {};
-                }
+                return this._cache.settings || {};
             },
 
             saveSetting(data) {
                 const existing = this.getSetting();
                 const merged = { ...existing, ...data };
+                this._cache.settings = merged;
                 localStorage.setItem('settings', JSON.stringify(merged));
+                // Sync to server
+                fetch('/api/settings', {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include',
+                    body: JSON.stringify(merged)
+                }).catch(() => {
+                    UI.toast('Failed to sync settings to server.', 'error');
+                });
                 return merged;
             }
         };
@@ -2734,6 +2922,8 @@
                 document.getElementById('guestModalTitle').textContent = 'Add Guest';
                 document.getElementById('guestForm').reset();
                 document.getElementById('guestForm').dataset.id = '';
+                document.getElementById('guestRating').value = '0';
+                document.querySelectorAll('#guestRatingStars span').forEach(s => { s.style.color = 'var(--border)'; });
                 UI.showModal('guestModal');
             });
 
@@ -2749,6 +2939,9 @@
                     idType: document.getElementById('guestIdType').value,
                     idNumber: document.getElementById('guestIdNumber').value,
                     notes: document.getElementById('guestNotes').value,
+                    rating: parseInt(document.getElementById('guestRating').value) || 0,
+                    is_favorite: document.getElementById('guestFavorite').checked,
+                    is_flagged: document.getElementById('guestFlagged').checked,
                     createdAt: DB.get('staysync_guests', id)?.createdAt || new Date().toISOString()
                 };
 
@@ -2765,6 +2958,16 @@
                     document.querySelectorAll('#guests .filter-btn').forEach(b => b.classList.remove('active'));
                     e.target.classList.add('active');
                     renderGuests();
+                });
+            });
+
+            document.querySelectorAll('#guestRatingStars span').forEach(star => {
+                star.addEventListener('click', () => {
+                    const val = parseInt(star.dataset.star);
+                    document.getElementById('guestRating').value = val;
+                    document.querySelectorAll('#guestRatingStars span').forEach(s => {
+                        s.style.color = parseInt(s.dataset.star) <= val ? '#f59e0b' : 'var(--border)';
+                    });
                 });
             });
         }
@@ -2788,6 +2991,10 @@
                     );
                     return guestBookings.length > 1;
                 });
+            } else if (filterType === 'flagged') {
+                filtered = filtered.filter(guest => guest.is_flagged);
+            } else if (filterType === 'favorites') {
+                filtered = filtered.filter(guest => guest.is_favorite);
             }
 
             const guestsList = document.getElementById('guestsList');
@@ -2805,14 +3012,19 @@
                 );
                 const isRepeat = guestBookings.length > 1;
                 
+                const starHtml = guest.rating ? '<span style="color:#f59e0b;font-size:12px;margin-left:4px;">' + '&#9733;'.repeat(guest.rating) + '</span>' : '';
+                const flagIcon = guest.is_flagged ? '<span style="color:var(--danger);font-size:12px;margin-left:4px;" title="Flagged">&#9873;</span>' : '';
+                const favIcon = guest.is_favorite ? '<span style="color:#f59e0b;font-size:12px;margin-left:4px;" title="Favorite">&#9829;</span>' : '';
+
                 return `<div class="guest-card" onclick="editGuest('${guest.id}')">
                     <div class="guest-info">
                         <div class="guest-name">
                             ${guest.name}
                             ${isRepeat ? '<span class="guest-badge">Repeat Guest (' + guestBookings.length + ')</span>' : ''}
+                            ${flagIcon}${favIcon}
                         </div>
                         <div class="guest-subtitle">
-                            ${guest.email ? guest.email + ' • ' : ''}${guest.phone || ''}
+                            ${guest.email ? guest.email + ' • ' : ''}${guest.phone || ''}${starHtml}
                         </div>
                         <div class="guest-subtitle" style="margin-top: 6px; font-size: 11px;">
                             ${guest.nationality ? guest.nationality + ' • ' : ''}${guest.idType ? guest.idType.replace('_', ' ').toUpperCase() : ''}
@@ -2840,6 +3052,12 @@
             document.getElementById('guestIdType').value = guest.idType || '';
             document.getElementById('guestIdNumber').value = guest.idNumber || '';
             document.getElementById('guestNotes').value = guest.notes || '';
+            document.getElementById('guestRating').value = guest.rating || 0;
+            document.getElementById('guestFavorite').checked = !!guest.is_favorite;
+            document.getElementById('guestFlagged').checked = !!guest.is_flagged;
+            document.querySelectorAll('#guestRatingStars span').forEach(s => {
+                s.style.color = parseInt(s.dataset.star) <= (guest.rating || 0) ? '#f59e0b' : 'var(--border)';
+            });
             document.getElementById('guestForm').dataset.id = guestId;
 
             UI.showModal('guestModal');
@@ -2998,7 +3216,7 @@
             const loggedIn = await Auth.checkSession();
             if (loggedIn) {
                 document.getElementById('authModal').classList.remove('show');
-                init();
+                await init();
             } else {
                 document.getElementById('authModal').classList.add('show');
                 // Auto-setup DB tables on first visit
@@ -3006,7 +3224,32 @@
             }
         }
 
-        function init() {
+        async function checkMigration() {
+            if (localStorage.getItem('migrated_to_server')) return;
+            const hasLocalData = localStorage.getItem('properties') || localStorage.getItem('bookings') || localStorage.getItem('landlords');
+            if (!hasLocalData) { localStorage.setItem('migrated_to_server', 'true'); return; }
+            if (!confirm('Found local data. Migrate to cloud for cross-device access?')) return;
+            const data = {
+                properties: JSON.parse(localStorage.getItem('properties') || '{}'),
+                landlords: JSON.parse(localStorage.getItem('landlords') || '{}'),
+                bookings: JSON.parse(localStorage.getItem('bookings') || '{}'),
+                guests: JSON.parse(localStorage.getItem('staysync_guests') || '{}'),
+                activity: JSON.parse(localStorage.getItem('activity') || '{}'),
+                messageHistory: JSON.parse(localStorage.getItem('messageHistory') || '{}'),
+                settings: JSON.parse(localStorage.getItem('settings') || '{}')
+            };
+            try {
+                const res = await fetch('/api/db/migrate', { method: 'POST', headers: {'Content-Type':'application/json'}, credentials:'include', body: JSON.stringify(data) });
+                if (res.ok) {
+                    localStorage.setItem('migrated_to_server', 'true');
+                    UI.toast('Data migrated to cloud successfully!', 'success');
+                    await DB.init(); // Reload from server
+                }
+            } catch(e) { UI.toast('Migration failed, will retry later', 'error'); }
+        }
+
+        async function init() {
+            await DB.init();
             initCalendar();
             initNavigation();
             initProperties();
@@ -3024,6 +3267,9 @@
             populateLandlordCheckboxes();
             renderMessageHistory();
             displayApiStatus();
+            initReports();
+            initTeam();
+            await checkMigration();
         }
 
         function initNavigation() {
@@ -3036,6 +3282,7 @@
                     if (pageId === 'landlords') renderLandlords();
                     if (pageId === 'guests') renderGuests();
                     if (pageId === 'messages') renderMessageHistory();
+                    if (pageId === 'reports') loadReports();
                     if (pageId === 'dashboard') { renderDashboard(); renderReminders(); }
                     updateFabVisibility();
                                     });
@@ -3146,6 +3393,83 @@
             const occupancy = totalSlots > 0 ? Math.round((occupiedSlots / totalSlots) * 100) : 0;
             document.getElementById('occupancyFill').style.width = occupancy + '%';
             document.getElementById('occupancyLabel').textContent = occupancy + '%';
+            renderCharts();
+        }
+
+        function renderCharts() {
+            // Revenue trend - last 6 months
+            const canvas = document.getElementById('revenueChart');
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+            const bookings = DB.getList('bookings').filter(b => b.status !== 'Cancelled');
+            const months = [];
+            const now = new Date();
+            for (let i = 5; i >= 0; i--) {
+                const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+                const key = d.toISOString().slice(0, 7);
+                const label = d.toLocaleString('en-US', { month: 'short' });
+                const rev = bookings.filter(b => b.checkIn && b.checkIn.startsWith(key))
+                    .reduce((s, b) => s + (b.totalRevenue || b.total_revenue || 0), 0) / 100;
+                months.push({ key, label, rev });
+            }
+            const maxRev = Math.max(...months.map(m => m.rev), 1);
+            const w = canvas.width = canvas.offsetWidth * 2;
+            const h = canvas.height = 360;
+            ctx.clearRect(0, 0, w, h);
+            const pad = { top: 20, right: 20, bottom: 40, left: 60 };
+            const cw = w - pad.left - pad.right;
+            const ch = h - pad.top - pad.bottom;
+
+            // Grid lines
+            ctx.strokeStyle = '#e2e8f0';
+            ctx.lineWidth = 1;
+            for (let i = 0; i <= 4; i++) {
+                const y = pad.top + (ch / 4) * i;
+                ctx.beginPath(); ctx.moveTo(pad.left, y); ctx.lineTo(w - pad.right, y); ctx.stroke();
+                ctx.fillStyle = '#94a3b8'; ctx.font = '20px sans-serif'; ctx.textAlign = 'right';
+                ctx.fillText((maxRev - (maxRev / 4) * i).toLocaleString('en-US', {maximumFractionDigits: 0}), pad.left - 8, y + 6);
+            }
+
+            // Line
+            ctx.strokeStyle = '#2563eb';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            months.forEach((m, i) => {
+                const x = pad.left + (cw / (months.length - 1)) * i;
+                const y = pad.top + ch - (m.rev / maxRev) * ch;
+                if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+            });
+            ctx.stroke();
+
+            // Points + labels
+            months.forEach((m, i) => {
+                const x = pad.left + (cw / (months.length - 1)) * i;
+                const y = pad.top + ch - (m.rev / maxRev) * ch;
+                ctx.fillStyle = '#2563eb';
+                ctx.beginPath(); ctx.arc(x, y, 5, 0, Math.PI * 2); ctx.fill();
+                ctx.fillStyle = '#64748b'; ctx.font = '20px sans-serif'; ctx.textAlign = 'center';
+                ctx.fillText(m.label, x, h - 10);
+            });
+
+            // Occupancy by property
+            const properties = DB.getList('properties').filter(p => p.status === 'Active');
+            const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+            const occDiv = document.getElementById('occupancyByProperty');
+            if (!occDiv || properties.length === 0) { if (occDiv) occDiv.innerHTML = '<div style="color:var(--text-secondary);font-size:13px;">No active properties</div>'; return; }
+
+            occDiv.innerHTML = properties.map(prop => {
+                const propBookings = bookings.filter(b => (b.propertyId || b.property_id) === prop.id);
+                const bookedDays = new Set();
+                propBookings.forEach(b => {
+                    const start = new Date(b.checkIn || b.check_in);
+                    const end = new Date(b.checkOut || b.check_out);
+                    for (let d = new Date(start); d < end; d.setDate(d.getDate() + 1)) {
+                        if (d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear()) bookedDays.add(d.getDate());
+                    }
+                });
+                const pct = Math.round((bookedDays.size / daysInMonth) * 100);
+                return '<div style="margin-bottom:12px;"><div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px;"><span>' + prop.name + '</span><span style="font-weight:600;">' + pct + '%</span></div><div class="progress-bar"><div class="progress-fill" style="width:' + pct + '%;background:' + (prop.color || 'var(--primary)') + ';"></div></div></div>';
+            }).join('');
         }
 
         // ===== PROPERTIES =====
@@ -3286,6 +3610,8 @@
                 document.getElementById('landlordForm').reset();
                 document.getElementById('landlordForm').dataset.id = '';
                 document.getElementById('deleteLandlordBtn').style.display = 'none';
+                document.getElementById('portalShareDiv').style.display = 'none';
+                document.getElementById('portalLinkInput').value = '';
                 UI.showModal('landlordModal');
             });
 
@@ -3352,6 +3678,8 @@
                     document.getElementById('llNotes').value = ll.notes;
                     document.getElementById('landlordForm').dataset.id = id;
                     document.getElementById('deleteLandlordBtn').style.display = 'flex';
+                    document.getElementById('portalShareDiv').style.display = 'block';
+                    document.getElementById('portalLinkInput').value = '';
                     UI.showModal('landlordModal');
                 });
             });
@@ -3376,6 +3704,7 @@
                 document.getElementById('bookingForm').reset();
                 document.getElementById('bookingForm').dataset.id = '';
                 document.getElementById('deleteBookingBtn').style.display = 'none';
+                document.getElementById('bookingReceiptBtn').style.display = 'none';
                 const today = new Date().toISOString().split('T')[0];
                 document.getElementById('bookingCheckIn').value = today;
                 document.getElementById('bookingCheckOut').value = today;
@@ -3782,6 +4111,7 @@
             document.getElementById('bookingNotes').value = booking.notes;
             document.getElementById('bookingForm').dataset.id = bookingId;
             document.getElementById('deleteBookingBtn').style.display = 'flex';
+            document.getElementById('bookingReceiptBtn').style.display = 'flex';
             updateBookingCalculations();
             UI.showModal('bookingModal');
         }
@@ -3966,7 +4296,7 @@
                 } else {
                     document.getElementById('authError').style.display = 'none';
                     document.getElementById('authModal').classList.remove('show');
-                    init();
+                    await init();
                 }
             } catch (err) {
                 document.getElementById('authErrorText').textContent = 'Login failed: ' + (err.message || 'Unknown error. Try using HTTPS.');
@@ -4004,9 +4334,9 @@
                 } else {
                     document.getElementById('authError').style.display = 'none';
                     showSuccessBanner('Account created successfully! You can now log in.');
-                    setTimeout(() => {
+                    setTimeout(async () => {
                         document.getElementById('authModal').classList.remove('show');
-                        init();
+                        await init();
                     }, 2000);
                 }
             } catch (err) {
@@ -4038,17 +4368,32 @@
 
         // ===== SERVICE WORKER =====
         if ('serviceWorker' in navigator) {
-            const swCode = `
-                self.addEventListener('install', e => e.waitUntil(caches.open('phiyalistings-v1').then(c => c.addAll(['/']))));
-                self.addEventListener('activate', e => e.waitUntil(caches.keys().then(keys => Promise.all(keys.map(k => k !== 'phiyalistings-v1' ? caches.delete(k) : null)))));
-                self.addEventListener('fetch', e => {
-                    if (e.request.method !== 'GET') return;
-                    e.respondWith(caches.match(e.request).then(r => r || fetch(e.request).then(r => caches.open('phiyalistings-v1').then(c => { c.put(e.request, r.clone()); return r; }))).catch(() => new Response('Offline')));
+            navigator.serviceWorker.register('/sw.js').catch(() => {});
+        }
+
+        // ===== PWA INSTALL =====
+        let deferredPrompt;
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            if (!localStorage.getItem('pwa_dismissed')) {
+                document.getElementById('pwaInstallBanner').style.display = 'flex';
+            }
+        });
+
+        function installPWA() {
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                deferredPrompt.userChoice.then(() => {
+                    deferredPrompt = null;
+                    document.getElementById('pwaInstallBanner').style.display = 'none';
                 });
-            `;
-            const blob = new Blob([swCode], { type: 'application/javascript' });
-            const swUrl = URL.createObjectURL(blob);
-            navigator.serviceWorker.register(swUrl).catch(() => {});
+            }
+        }
+
+        function dismissPWA() {
+            document.getElementById('pwaInstallBanner').style.display = 'none';
+            localStorage.setItem('pwa_dismissed', 'true');
         }
 
         // ===== INIT =====
@@ -4081,9 +4426,132 @@
             }
         };
 
+        // ===== REPORTS =====
+        function initReports() {
+            const monthInput = document.getElementById('reportMonth');
+            if (!monthInput) return;
+            monthInput.value = new Date().toISOString().slice(0, 7);
+            monthInput.addEventListener('change', loadReports);
+            document.getElementById('downloadReportCSV')?.addEventListener('click', downloadReportCSV);
+            loadReports();
+        }
+
+        async function loadReports() {
+            const month = document.getElementById('reportMonth').value;
+            if (!month) return;
+            try {
+                const [revRes, payRes] = await Promise.all([
+                    fetch('/api/reports/revenue?month=' + month, { credentials: 'include' }),
+                    fetch('/api/reports/payouts?month=' + month, { credentials: 'include' })
+                ]);
+                const revenue = await revRes.json();
+                const payouts = await payRes.json();
+
+                const revDiv = document.getElementById('revenueReport');
+                if (Array.isArray(revenue) && revenue.length > 0) {
+                    const symbol = (DB.getSetting().currency === 'USD' ? '$' : DB.getSetting().currency === 'EUR' ? '\u20AC' : DB.getSetting().currency === 'GBP' ? '\u00A3' : '\u20A6');
+                    revDiv.innerHTML = '<table style="width:100%;font-size:13px;border-collapse:collapse;"><thead><tr style="border-bottom:2px solid var(--border);text-align:left;"><th style="padding:8px 4px;">Property</th><th>Bookings</th><th>Nights</th><th style="text-align:right;">Revenue</th></tr></thead><tbody>' +
+                        revenue.map(r => '<tr style="border-bottom:1px solid var(--border);"><td style="padding:8px 4px;">' + r.property_name + '</td><td>' + r.booking_count + '</td><td>' + r.total_nights + '</td><td style="text-align:right;font-weight:600;">' + symbol + (r.total_revenue / 100).toLocaleString() + '</td></tr>').join('') +
+                        '<tr style="font-weight:700;border-top:2px solid var(--border);"><td style="padding:8px 4px;">Total</td><td>' + revenue.reduce((s,r) => s + Number(r.booking_count), 0) + '</td><td>' + revenue.reduce((s,r) => s + Number(r.total_nights), 0) + '</td><td style="text-align:right;">' + symbol + (revenue.reduce((s,r) => s + Number(r.total_revenue), 0) / 100).toLocaleString() + '</td></tr>' +
+                        '</tbody></table>';
+                } else {
+                    revDiv.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text-secondary);">No revenue data for this month</div>';
+                }
+
+                const payDiv = document.getElementById('payoutReport');
+                if (Array.isArray(payouts) && payouts.length > 0) {
+                    const symbol = (DB.getSetting().currency === 'USD' ? '$' : DB.getSetting().currency === 'EUR' ? '\u20AC' : DB.getSetting().currency === 'GBP' ? '\u00A3' : '\u20A6');
+                    payDiv.innerHTML = '<table style="width:100%;font-size:13px;border-collapse:collapse;"><thead><tr style="border-bottom:2px solid var(--border);text-align:left;"><th style="padding:8px 4px;">Landlord</th><th>Bookings</th><th style="text-align:right;">Payout</th><th style="text-align:right;">Mgmt Fee</th></tr></thead><tbody>' +
+                        payouts.map(p => '<tr style="border-bottom:1px solid var(--border);"><td style="padding:8px 4px;">' + p.landlord_name + '</td><td>' + p.booking_count + '</td><td style="text-align:right;font-weight:600;color:var(--success);">' + symbol + (p.total_payout / 100).toLocaleString() + '</td><td style="text-align:right;">' + symbol + (p.management_fee / 100).toLocaleString() + '</td></tr>').join('') +
+                        '</tbody></table>';
+                } else {
+                    payDiv.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text-secondary);">No payout data for this month</div>';
+                }
+            } catch(e) {
+                document.getElementById('revenueReport').innerHTML = 'Failed to load';
+                document.getElementById('payoutReport').innerHTML = 'Failed to load';
+            }
+        }
+
+        function downloadReportCSV() {
+            const tables = document.querySelectorAll('#reports table');
+            if (tables.length === 0) { alert('Load a report first'); return; }
+            let csv = '';
+            tables.forEach(table => {
+                table.querySelectorAll('tr').forEach(row => {
+                    const cells = Array.from(row.querySelectorAll('th, td')).map(c => '"' + c.textContent.replace(/"/g, '""') + '"');
+                    csv += cells.join(',') + '\n';
+                });
+                csv += '\n';
+            });
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = 'phiyalistings-report-' + document.getElementById('reportMonth').value + '.csv';
+            a.click();
+        }
+
+        // ===== TEAM MANAGEMENT =====
+        function initTeam() {
+            document.getElementById('teamInviteForm')?.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const username = document.getElementById('inviteUsername').value;
+                const role = document.getElementById('inviteRole').value;
+                try {
+                    const res = await fetch('/api/team/invite', { method:'POST', headers:{'Content-Type':'application/json'}, credentials:'include', body: JSON.stringify({username, role}) });
+                    const data = await res.json();
+                    if (res.ok) { UI.toast('Invitation sent!', 'success'); document.getElementById('inviteUsername').value = ''; loadTeamMembers(); }
+                    else UI.toast(data.error, 'error');
+                } catch(e) { UI.toast('Failed to invite', 'error'); }
+            });
+            loadTeamMembers();
+        }
+
+        async function loadTeamMembers() {
+            const list = document.getElementById('teamMembersList');
+            if (!list) return;
+            try {
+                const res = await fetch('/api/team/members', { credentials:'include' });
+                const members = await res.json();
+                if (!Array.isArray(members) || members.length === 0) {
+                    list.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text-secondary);">No team members yet</div>';
+                    return;
+                }
+                list.innerHTML = members.map(m =>
+                    '<div style="display:flex;justify-content:space-between;align-items:center;padding:10px;border-bottom:1px solid var(--border);"><div><div style="font-weight:600;">' + m.username + '</div><div style="font-size:12px;color:var(--text-secondary);">' + m.role + (m.acceptedAt ? '' : ' (pending)') + '</div></div><button class="btn-danger btn-small" onclick="removeTeamMember(' + m.id + ')">Remove</button></div>'
+                ).join('');
+            } catch(e) { list.innerHTML = 'Failed to load'; }
+        }
+
+        async function removeTeamMember(id) {
+            if (!confirm('Remove this team member?')) return;
+            await fetch('/api/team/members/' + id, { method:'DELETE', credentials:'include' });
+            loadTeamMembers();
+        }
+
+        // ===== RECEIPT =====
+        function openReceipt() {
+            const id = document.getElementById('bookingForm').dataset.id;
+            if (id) window.open('/api/invoices/receipt?bookingId=' + id, '_blank');
+        }
+
+        // ===== LANDLORD PORTAL =====
+        async function generatePortalLink() {
+            const id = document.getElementById('landlordForm').dataset.id;
+            if (!id) return;
+            try {
+                const res = await fetch('/api/portal/generate', { method:'POST', headers:{'Content-Type':'application/json'}, credentials:'include', body: JSON.stringify({landlordId: id}) });
+                const data = await res.json();
+                if (res.ok) {
+                    document.getElementById('portalLinkInput').value = data.url;
+                    UI.toast('Portal link generated!', 'success');
+                }
+            } catch(e) { UI.toast('Failed to generate link', 'error'); }
+        }
+
         // Initialize instruction banners
         function initInstructionBanners() {
-            const screens = ['dashboard', 'calendar', 'properties', 'landlords', 'guests', 'messages', 'settings'];
+            const screens = ['dashboard', 'calendar', 'properties', 'landlords', 'guests', 'messages', 'reports', 'settings'];
             screens.forEach(screen => {
                 const key = `instruction_dismissed_${screen}`;
                 const banner = document.getElementById(`${screen}Instruction`);
@@ -4108,6 +4576,9 @@
             document.getElementById('landlordModalTitle').textContent = 'Add Landlord';
             document.getElementById('landlordForm').reset();
             document.getElementById('landlordForm').dataset.id = '';
+            document.getElementById('deleteLandlordBtn').style.display = 'none';
+            document.getElementById('portalShareDiv').style.display = 'none';
+            document.getElementById('portalLinkInput').value = '';
             UI.showModal('landlordModal');
         }
 
@@ -4115,6 +4586,8 @@
             document.getElementById('guestModalTitle').textContent = 'Add Guest';
             document.getElementById('guestForm').reset();
             document.getElementById('guestForm').dataset.id = '';
+            document.getElementById('guestRating').value = '0';
+            document.querySelectorAll('#guestRatingStars span').forEach(s => { s.style.color = 'var(--border)'; });
             UI.showModal('guestModal');
         }
 
@@ -4174,19 +4647,27 @@
                 imageInput.addEventListener('change', (e) => {
                     const file = e.target.files[0];
                     if (file) {
-                        // Check file size (recommend under 500KB)
-                        if (file.size > 500000) {
-                            alert('Image is larger than 500KB. Please use a smaller image to avoid localStorage limits.');
-                            return;
-                        }
-                        
                         const reader = new FileReader();
-                        reader.onload = (event) => {
+                        reader.onload = async (event) => {
                             const base64 = event.target.result;
-                            imageData.value = base64;
-                            
-                            // Show preview
+                            // Show preview immediately
                             imagePreview.innerHTML = `<img src="${base64}" alt="Property image" style="width: 100%; height: 100%; object-fit: cover;">`;
+                            // Upload to Blob
+                            try {
+                                const res = await fetch('/api/upload?filename=' + encodeURIComponent(file.name), {
+                                    method: 'POST',
+                                    credentials: 'include',
+                                    body: file
+                                });
+                                if (res.ok) {
+                                    const { url } = await res.json();
+                                    imageData.value = url;
+                                } else {
+                                    imageData.value = base64; // Fallback to base64
+                                }
+                            } catch(e) {
+                                imageData.value = base64; // Fallback
+                            }
                         };
                         reader.readAsDataURL(file);
                     }
