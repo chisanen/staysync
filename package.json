@@ -4,5 +4,8 @@
   "private": true,
   "scripts": {
     "dev": "vercel dev"
+  },
+  "dependencies": {
+    "@neondatabase/serverless": "^1.0.2"
   }
 }

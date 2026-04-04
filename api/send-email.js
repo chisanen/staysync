@@ -31,7 +31,7 @@ export default async function handler(req, res) {
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        from: from || 'StaySync <onboarding@resend.dev>',
+        from: from || 'Phiyalistings <onboarding@resend.dev>',
         to: Array.isArray(to) ? to : [to],
         subject,
         html

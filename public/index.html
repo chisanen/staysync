@@ -2525,112 +2525,90 @@
     </div>
 
     <script>
-        // ===== AUTHENTICATION =====
+        // ===== AUTHENTICATION (Server-backed) =====
         const Auth = {
-            async hashPassword(password, salt = null) {
-                const saltArr = salt ? new Uint8Array(salt) : crypto.getRandomValues(new Uint8Array(16));
-                const encoder = new TextEncoder();
-                const data = encoder.encode(password);
-                const combined = new Uint8Array(saltArr.length + data.length);
-                combined.set(saltArr);
-                combined.set(data, saltArr.length);
-
-                // crypto.subtle requires HTTPS or localhost — fallback for file:// protocol
-                if (crypto.subtle) {
-                    const hash = await crypto.subtle.digest('SHA-256', combined);
-                    return {
-                        hash: Array.from(new Uint8Array(hash)).map(b => b.toString(16).padStart(2, '0')).join(''),
-                        salt: Array.from(saltArr).map(b => b.toString(16).padStart(2, '0')).join('')
-                    };
-                } else {
-                    // Simple fallback hash for file:// protocol (not cryptographically strong but functional)
-                    let h = 0x811c9dc5;
-                    for (let i = 0; i < combined.length; i++) {
-                        h ^= combined[i];
-                        h = Math.imul(h, 0x01000193);
-                    }
-                    const fallbackHash = (h >>> 0).toString(16).padStart(8, '0').repeat(8);
-                    return {
-                        hash: fallbackHash,
-                        salt: Array.from(saltArr).map(b => b.toString(16).padStart(2, '0')).join('')
-                    };
-                }
-            },
+            _authenticated: false,
+            _username: null,
 
             isLoggedIn() {
-                return sessionStorage.getItem('session') !== null;
+                return this._authenticated;
             },
 
             getSession() {
-                const session = sessionStorage.getItem('session');
-                if (!session) return null;
+                if (!this._authenticated) return null;
+                return { username: this._username };
+            },
+
+            async checkSession() {
                 try {
-                    const data = JSON.parse(session);
-                    if (Date.now() - data.timestamp > 8 * 60 * 60 * 1000) {
-                        sessionStorage.removeItem('session');
-                        return null;
+                    const res = await fetch('/api/auth/check', { credentials: 'include' });
+                    if (res.ok) {
+                        const data = await res.json();
+                        this._authenticated = data.authenticated;
+                        this._username = data.username;
+                        return data.authenticated;
                     }
-                    return data;
-                } catch {
-                    return null;
+                } catch (e) {
+                    // Offline — fall back to local flag
+                    this._authenticated = sessionStorage.getItem('phiya_logged_in') === 'true';
+                    this._username = sessionStorage.getItem('phiya_username') || null;
+                    return this._authenticated;
                 }
+                return false;
             },
 
             async login(username, password) {
-                const settings = DB.getSetting();
-                if (!settings || !settings.passwordHash) {
-                    return { error: 'Account not found' };
-                }
-
-                const failedAttempts = parseInt(sessionStorage.getItem('failedAttempts') || '0');
-                const lockoutTime = sessionStorage.getItem('lockoutTime');
-
-                if (lockoutTime && Date.now() < parseInt(lockoutTime)) {
-                    return { error: 'Account locked. Try again in 5 minutes.' };
-                }
-
-                const hashResult = await this.hashPassword(password, settings.passwordSalt.match(/.{1,2}/g).map(b => parseInt(b, 16)));
-                if (hashResult.hash !== settings.passwordHash) {
-                    const newAttempts = failedAttempts + 1;
-                    if (newAttempts >= 5) {
-                        sessionStorage.setItem('lockoutTime', (Date.now() + 5 * 60 * 1000).toString());
-                        sessionStorage.removeItem('failedAttempts');
-                        return { error: 'Too many failed attempts. Locked for 5 minutes.' };
+                try {
+                    const res = await fetch('/api/auth/login', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        credentials: 'include',
+                        body: JSON.stringify({ username, password })
+                    });
+                    const data = await res.json();
+                    if (res.ok && data.success) {
+                        this._authenticated = true;
+                        this._username = data.username;
+                        sessionStorage.setItem('phiya_logged_in', 'true');
+                        sessionStorage.setItem('phiya_username', data.username);
+                        return { success: true };
                     }
-                    sessionStorage.setItem('failedAttempts', newAttempts.toString());
-                    return { error: 'Invalid credentials' };
+                    return { error: data.error || 'Login failed' };
+                } catch (e) {
+                    return { error: 'Network error. Check your connection.' };
                 }
-
-                sessionStorage.removeItem('failedAttempts');
-                sessionStorage.removeItem('lockoutTime');
-                const session = { username, timestamp: Date.now() };
-                sessionStorage.setItem('session', JSON.stringify(session));
-                return { success: true };
             },
 
             async signup(username, password) {
-                if (password.length < 8) {
-                    return { error: 'Password must be at least 8 characters' };
+                try {
+                    const res = await fetch('/api/auth/signup', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        credentials: 'include',
+                        body: JSON.stringify({ username, password })
+                    });
+                    const data = await res.json();
+                    if (res.ok && data.success) {
+                        this._authenticated = true;
+                        this._username = data.username;
+                        sessionStorage.setItem('phiya_logged_in', 'true');
+                        sessionStorage.setItem('phiya_username', data.username);
+                        return { success: true };
+                    }
+                    return { error: data.error || 'Signup failed' };
+                } catch (e) {
+                    return { error: 'Network error. Check your connection.' };
                 }
-
-                const existing = DB.getSetting();
-                if (existing && existing.passwordHash) {
-                    return { error: 'Account already exists' };
-                }
-
-                const hashResult = await this.hashPassword(password);
-                DB.saveSetting({
-                    passwordHash: hashResult.hash,
-                    passwordSalt: hashResult.salt
-                });
-
-                const session = { username, timestamp: Date.now() };
-                sessionStorage.setItem('session', JSON.stringify(session));
-                return { success: true };
             },
 
-            logout() {
-                sessionStorage.removeItem('session');
+            async logout() {
+                try {
+                    await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' });
+                } catch (e) {}
+                this._authenticated = false;
+                this._username = null;
+                sessionStorage.removeItem('phiya_logged_in');
+                sessionStorage.removeItem('phiya_username');
                 location.reload();
             }
         };
@@ -3012,12 +2990,15 @@
             }
         }
 
-function initAuth() {
-            if (Auth.isLoggedIn()) {
+        async function initAuth() {
+            const loggedIn = await Auth.checkSession();
+            if (loggedIn) {
                 document.getElementById('authModal').classList.remove('show');
                 init();
             } else {
                 document.getElementById('authModal').classList.add('show');
+                // Auto-setup DB tables on first visit
+                fetch('/api/auth/setup', { method: 'POST' }).catch(() => {});
             }
         }
 
@@ -3861,32 +3842,16 @@ function initAuth() {
             });
 
             document.getElementById('clearDataBtn').addEventListener('click', () => {
-                const password = prompt('Enter your password to confirm data deletion:');
-                if (!password) return;
-
-                const settings = DB.getSetting();
-                Auth.hashPassword(password, settings.passwordSalt.match(/.{1,2}/g).map(b => parseInt(b, 16))).then(result => {
-                    if (result.hash === settings.passwordHash) {
-                        localStorage.clear();
-                        sessionStorage.clear();
-                        location.reload();
-                    } else {
-                        alert('Incorrect password');
-                    }
-                });
+                if (!confirm('Are you sure you want to delete ALL local data? This cannot be undone.')) return;
+                const confirmText = prompt('Type "DELETE" to confirm:');
+                if (confirmText !== 'DELETE') return;
+                localStorage.clear();
+                location.reload();
             });
 
-            document.getElementById('logoutBtn').addEventListener('click', () => {
-                Auth.logout();
-            });
-
-            document.getElementById('sidebarLogoutBtn').addEventListener('click', () => {
-                Auth.logout();
-            });
-
-            document.getElementById('mobileLogoutBtn').addEventListener('click', () => {
-                Auth.logout();
-            });
+            document.getElementById('logoutBtn').addEventListener('click', () => Auth.logout());
+            document.getElementById('sidebarLogoutBtn').addEventListener('click', () => Auth.logout());
+            document.getElementById('mobileLogoutBtn').addEventListener('click', () => Auth.logout());
 
             const testEmailBtn = document.getElementById('testEmailBtn');
             if (testEmailBtn) {
