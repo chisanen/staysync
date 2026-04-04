@@ -1526,6 +1526,17 @@
         .calendar-day.selected-checkin { background: var(--success) !important; color: white !important; }
         .calendar-day.selected-checkout { background: var(--warning) !important; color: white !important; }
         .calendar-day.in-range { background: rgba(37, 99, 235, 0.1); }
+
+        .timeline-container { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+        .timeline-grid { display: grid; min-width: 800px; font-size: 12px; }
+        .timeline-header { position: sticky; left: 0; background: var(--surface); z-index: 2; padding: 8px; font-weight: 600; border-right: 1px solid var(--border); min-width: 120px; display: flex; align-items: center; }
+        .timeline-cell { border-right: 1px solid var(--border); border-bottom: 1px solid var(--border); min-height: 40px; position: relative; }
+        .timeline-cell.today { background: rgba(37, 99, 235, 0.05); }
+        .timeline-cell.weekend { background: rgba(0,0,0,0.02); }
+        .timeline-booking { position: absolute; top: 4px; bottom: 4px; border-radius: 4px; color: white; font-size: 10px; padding: 2px 6px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; cursor: pointer; z-index: 1; display: flex; align-items: center; }
+        .timeline-day-header { text-align: center; padding: 4px 2px; font-size: 10px; border-right: 1px solid var(--border); border-bottom: 2px solid var(--border); }
+        .timeline-day-header.today { color: var(--primary); font-weight: 700; }
+        .timeline-day-header.weekend { color: var(--text-secondary); }
 </style>
 </head>
 <body>
@@ -1688,7 +1699,12 @@
                             <button class="btn-icon btn-small" onclick="app.showInstruction('calendar')">?</button>
                         </div>
                     </div>
-                    
+
+                    <div class="search-bar" style="margin-bottom:12px;">
+                        <input type="text" id="bookingSearch" placeholder="Search bookings (guest name, property...)">
+                    </div>
+                    <div id="bookingSearchResults" style="display:none;margin-bottom:16px;"></div>
+
                     <div class="calendar-controls">
                         <button class="btn-icon" id="prevMonth">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"></polyline></svg>
@@ -1697,9 +1713,11 @@
                         <button class="btn-icon" id="nextMonth">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"></polyline></svg>
                         </button>
+                        <button class="btn-small btn-secondary" id="todayBtn" style="margin-left:8px;min-height:32px;font-size:12px;">Today</button>
                         <div class="calendar-view-toggle" id="calendarViewToggle">
                             <button class="active" data-view="grid">Grid</button>
                             <button data-view="list">List</button>
+                            <button data-view="timeline">Timeline</button>
                         </div>
                     </div>
 
@@ -1712,6 +1730,7 @@
                             Add Booking
                         </button>
                         <button class="btn-secondary btn-small" id="fromTemplateBtn" onclick="showBookingTemplates()" style="white-space:nowrap;">Templates</button>
+                        <button class="btn-secondary btn-small" id="availabilityBtn" onclick="showAvailabilityChecker()" style="white-space:nowrap;">Available</button>
                     </div>
 
                     <div class="calendar-grid" id="calendarGrid">
@@ -1719,6 +1738,8 @@
                     </div>
 
                     <div id="calendarTapInstruction" style="display:none;padding:10px;background:rgba(37,99,235,0.1);border-radius:8px;margin-bottom:12px;font-size:13px;color:var(--primary);text-align:center;"></div>
+
+                    <div id="calendarLegend" style="display:flex;flex-wrap:wrap;gap:8px;margin:8px 0;font-size:11px;"></div>
 
                     <div id="calendarBookingsList" style="margin-top: 20px;">
                         <!-- Selected date bookings shown here -->
@@ -3907,11 +3928,64 @@
                     renderCalendar();
                 });
             });
+
+            // Today button
+            document.getElementById('todayBtn').addEventListener('click', () => {
+                currentDate = new Date();
+                renderCalendar();
+            });
+
+            // Swipe navigation
+            let touchStartX = 0;
+            const calGrid = document.getElementById('calendarGrid');
+            calGrid.addEventListener('touchstart', (e) => { touchStartX = e.touches[0].clientX; }, { passive: true });
+            calGrid.addEventListener('touchend', (e) => {
+                const diff = touchStartX - e.changedTouches[0].clientX;
+                if (Math.abs(diff) > 60) {
+                    if (diff > 0) { currentDate.setMonth(currentDate.getMonth() + 1); }
+                    else { currentDate.setMonth(currentDate.getMonth() - 1); }
+                    renderCalendar();
+                }
+            }, { passive: true });
+
+            // Booking search
+            document.getElementById('bookingSearch').addEventListener('input', debounce(function() {
+                const query = this.value.toLowerCase().trim();
+                const resultsDiv = document.getElementById('bookingSearchResults');
+                if (!query || query.length < 2) {
+                    resultsDiv.style.display = 'none';
+                    return;
+                }
+                const bookings = DB.getList('bookings');
+                const matches = bookings.filter(b => {
+                    const guestName = (b.guestName || b.guest_name || '').toLowerCase();
+                    const guestEmail = (b.guestEmail || b.guest_email || '').toLowerCase();
+                    const prop = DB.get('properties', b.propertyId || b.property_id);
+                    const propName = (prop?.name || '').toLowerCase();
+                    return guestName.includes(query) || guestEmail.includes(query) || propName.includes(query);
+                }).sort((a, b) => ((b.checkIn || b.check_in) || '').localeCompare((a.checkIn || a.check_in) || ''));
+
+                if (matches.length === 0) {
+                    resultsDiv.innerHTML = '<div class="card" style="padding:12px;font-size:13px;color:var(--text-secondary);text-align:center;">No bookings found</div>';
+                } else {
+                    resultsDiv.innerHTML = '<div class="card" style="padding:8px;"><div style="font-weight:600;font-size:13px;margin-bottom:8px;">' + matches.length + ' result(s)</div>' + matches.slice(0, 20).map(b => {
+                        const prop = DB.get('properties', b.propertyId || b.property_id);
+                        const checkIn = b.checkIn || b.check_in || '';
+                        const checkOut = b.checkOut || b.check_out || '';
+                        return '<div class="list-item" style="cursor:pointer;margin-bottom:4px;padding:8px;" onclick="editBooking(\'' + b.id + '\')"><div style="flex:1;"><div style="font-weight:600;font-size:13px;">' + escapeHtml(b.guestName || b.guest_name) + '</div><div style="font-size:12px;color:var(--text-secondary);">' + escapeHtml(prop?.name || '') + ' · ' + checkIn + ' → ' + checkOut + '</div></div><span class="list-item-badge badge-' + (b.status || 'confirmed').toLowerCase().replace(' ', '-') + '" style="font-size:10px;">' + (b.status || '') + '</span></div>';
+                    }).join('') + '</div>';
+                }
+                resultsDiv.style.display = 'block';
+            }, 300));
         }
 
         function renderCalendar() {
             if (calendarViewMode === 'list') {
                 renderCalendarListView();
+                return;
+            }
+            if (calendarViewMode === 'timeline') {
+                renderCalendarTimeline();
                 return;
             }
             const year = currentDate.getFullYear();
@@ -3954,7 +4028,8 @@
 
                 const bookingBarsHtml = dayBookings.slice(0, 3).map(b => {
                     const prop = DB.get('properties', b.propertyId);
-                    return `<div class="booking-bar" style="background: ${prop?.color || '#2563eb'};"></div>`;
+                    const barOpacity = b.status === 'Checked Out' ? '0.4' : b.status === 'Checked In' ? '1' : '0.75';
+                    return `<div class="booking-bar" style="background: ${prop?.color || '#2563eb'};opacity: ${barOpacity};"></div>`;
                 }).join('');
 
                 let dayClass = 'calendar-day';
@@ -4026,10 +4101,17 @@
 
                     // Show bookings for tapped date
                     let bookingsHtml = '<div class="card"><div style="font-weight: 600; margin-bottom: 12px;">Bookings on ' + UI.formatDate(date) + '</div>';
+                    const dayRevenue = dateBookings.reduce((sum, b) => sum + (b.totalRevenue || b.total_revenue || 0), 0);
+                    if (dayRevenue > 0) {
+                        bookingsHtml += '<div style="font-size:12px;color:var(--success);font-weight:600;margin-bottom:8px;">Revenue: ' + UI.formatCurrency(dayRevenue) + '</div>';
+                    }
                     if (dateBookings.length) {
                         bookingsHtml += '<div id="batchActionsBar" style="display:none;padding:10px;background:var(--primary);color:white;border-radius:8px;margin-bottom:8px;"><div style="font-size:13px;font-weight:600;" id="batchCount">0 selected</div><div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap;"><button class="btn-small" style="background:var(--success);color:white;" onclick="batchStatusChange(\'Checked In\')">Check In All</button><button class="btn-small" style="background:var(--warning);color:white;" onclick="batchStatusChange(\'Checked Out\')">Check Out All</button><button class="btn-small btn-danger" onclick="batchStatusChange(\'Cancelled\')">Cancel All</button></div></div>';
                         bookingsHtml += dateBookings.map(b => {
                             const prop = DB.get('properties', b.propertyId);
+                            const bCheckIn = b.checkIn || b.check_in;
+                            const bCheckOut = b.checkOut || b.check_out;
+                            const nights = Math.max(1, Math.ceil((new Date(bCheckOut) - new Date(bCheckIn)) / 86400000));
                             return `<div class="list-item" style="cursor:pointer;margin-bottom:8px;" data-booking-id="${b.id}">
                                 <input type="checkbox" class="batch-select" data-bid="${b.id}" onclick="event.stopPropagation();updateBatchBar()" style="width:20px;height:20px;flex-shrink:0;">
                                 <div style="flex:1;">
@@ -4037,6 +4119,7 @@
                                     <div style="font-size: 12px; color: var(--text-secondary);">${prop?.name} • ${b.checkIn} to ${b.checkOut}</div>
                                 </div>
                                 <span class="list-item-badge badge-${b.status.toLowerCase().replace(' ', '-')}">${b.status}</span>
+                                <span style="font-size:10px;color:var(--text-secondary);margin-left:4px;">${nights}n</span>
                             </div>`;
                         }).join('');
                     } else {
@@ -4056,6 +4139,7 @@
             });
 
             renderBookingPropertySelect();
+            renderCalendarLegend();
         }
 
         function renderCalendarListView() {
@@ -4101,6 +4185,133 @@
 
             document.getElementById('calendarGrid').innerHTML = html || '<div style="text-align:center;padding:40px;color:var(--text-secondary);">No bookings this month</div>';
             renderBookingPropertySelect();
+            renderCalendarLegend();
+        }
+
+        function renderCalendarTimeline() {
+            const year = currentDate.getFullYear();
+            const month = currentDate.getMonth();
+            const monthName = currentDate.toLocaleString('en-US', { month: 'long', year: 'numeric' });
+            document.getElementById('calendarMonth').textContent = monthName;
+
+            const daysInMonth = new Date(year, month + 1, 0).getDate();
+            const properties = DB.getList('properties').filter(p => p.status === 'Active');
+            const bookings = DB.getList('bookings').filter(b => b.status !== 'Cancelled');
+            const propertyFilter = document.getElementById('propertyFilterSelect').value;
+            const today = new Date().toISOString().split('T')[0];
+
+            const filteredProps = propertyFilter ? properties.filter(p => p.id === propertyFilter) : properties;
+
+            if (filteredProps.length === 0) {
+                document.getElementById('calendarGrid').innerHTML = '<div style="text-align:center;padding:40px;color:var(--text-secondary);">No active properties</div>';
+                renderBookingPropertySelect();
+                renderCalendarLegend();
+                return;
+            }
+
+            let html = '<div class="timeline-container"><div class="timeline-grid" style="grid-template-columns: 120px repeat(' + daysInMonth + ', minmax(28px, 1fr));">';
+
+            // Header row
+            html += '<div class="timeline-header" style="border-bottom:2px solid var(--border);font-size:11px;">Property</div>';
+            for (let d = 1; d <= daysInMonth; d++) {
+                const dateStr = year + '-' + String(month+1).padStart(2,'0') + '-' + String(d).padStart(2,'0');
+                const dayOfWeek = new Date(dateStr).getDay();
+                const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
+                const isToday = dateStr === today;
+                const dayName = new Date(dateStr).toLocaleDateString('en-US', { weekday: 'narrow' });
+                html += '<div class="timeline-day-header' + (isToday ? ' today' : '') + (isWeekend ? ' weekend' : '') + '">' + d + '<br>' + dayName + '</div>';
+            }
+
+            // Property rows
+            filteredProps.forEach(prop => {
+                html += '<div class="timeline-header"><div style="width:8px;height:8px;border-radius:50%;background:' + (prop.color || 'var(--primary)') + ';margin-right:6px;flex-shrink:0;"></div><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + escapeHtml(prop.name) + '</span></div>';
+
+                // Day cells for this property
+                const propBookings = bookings.filter(b => (b.propertyId || b.property_id) === prop.id);
+
+                for (let d = 1; d <= daysInMonth; d++) {
+                    const dateStr = year + '-' + String(month+1).padStart(2,'0') + '-' + String(d).padStart(2,'0');
+                    const dayOfWeek = new Date(dateStr).getDay();
+                    const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
+                    const isToday = dateStr === today;
+
+                    html += '<div class="timeline-cell' + (isToday ? ' today' : '') + (isWeekend ? ' weekend' : '') + '">';
+
+                    // Check if a booking starts on this day
+                    propBookings.forEach(b => {
+                        const checkIn = b.checkIn || b.check_in;
+                        const checkOut = b.checkOut || b.check_out;
+                        if (checkIn === dateStr) {
+                            const endDate = new Date(checkOut);
+                            const lastDayOfMonth = new Date(year, month + 1, 0);
+                            const spanDays = endDate > lastDayOfMonth ? daysInMonth - d + 1 : Math.max(1, Math.ceil((endDate - new Date(dateStr)) / 86400000));
+                            const widthPercent = (spanDays * 100);
+                            const statusOpacity = b.status === 'Checked In' ? '1' : b.status === 'Checked Out' ? '0.5' : '0.85';
+                            html += '<div class="timeline-booking" onclick="editBooking(\'' + b.id + '\')" style="width:calc(' + widthPercent + '% - 2px);background:' + (prop.color || 'var(--primary)') + ';opacity:' + statusOpacity + ';" title="' + escapeHtml(b.guestName || b.guest_name) + ' (' + checkIn + ' → ' + checkOut + ')">' + escapeHtml(b.guestName || b.guest_name) + '</div>';
+                        }
+                    });
+
+                    html += '</div>';
+                }
+            });
+
+            html += '</div></div>';
+            document.getElementById('calendarGrid').innerHTML = html;
+            renderBookingPropertySelect();
+            renderCalendarLegend();
+        }
+
+        function renderCalendarLegend() {
+            const legend = document.getElementById('calendarLegend');
+            if (!legend) return;
+            const properties = DB.getList('properties').filter(p => p.status === 'Active');
+            legend.innerHTML = properties.map(p => '<div style="display:flex;align-items:center;gap:4px;"><div style="width:10px;height:10px;border-radius:3px;background:' + (p.color || 'var(--primary)') + ';"></div><span style="color:var(--text-secondary);">' + escapeHtml(p.name) + '</span></div>').join('');
+        }
+
+        function showAvailabilityChecker() {
+            const checkIn = prompt('Check-in date (YYYY-MM-DD):', new Date().toISOString().split('T')[0]);
+            if (!checkIn) return;
+            const checkOut = prompt('Check-out date (YYYY-MM-DD):', new Date(Date.now() + 2*86400000).toISOString().split('T')[0]);
+            if (!checkOut) return;
+
+            const properties = DB.getList('properties').filter(p => p.status === 'Active');
+            const bookings = DB.getList('bookings').filter(b => b.status !== 'Cancelled');
+
+            const available = properties.filter(prop => {
+                const conflicts = bookings.filter(b => {
+                    const bPropId = b.propertyId || b.property_id;
+                    const bCheckIn = b.checkIn || b.check_in;
+                    const bCheckOut = b.checkOut || b.check_out;
+                    return bPropId === prop.id && checkIn < bCheckOut && checkOut > bCheckIn;
+                });
+                return conflicts.length === 0;
+            });
+
+            let html = '<div class="card"><div style="font-weight:600;margin-bottom:8px;">Available Properties: ' + UI.formatDate(checkIn) + ' → ' + UI.formatDate(checkOut) + '</div>';
+            if (available.length === 0) {
+                html += '<div style="color:var(--text-secondary);font-size:13px;text-align:center;padding:16px;">No properties available for these dates</div>';
+            } else {
+                html += available.map(p => '<div class="list-item" style="margin-bottom:4px;cursor:pointer;" onclick="bookAvailableProperty(\'' + p.id + '\',\'' + checkIn + '\',\'' + checkOut + '\')"><div class="list-item-content"><div class="list-item-title">' + escapeHtml(p.name) + '</div><div class="list-item-subtitle">' + p.type + ' · ' + p.bedrooms + 'BR · ' + UI.formatCurrency(p.nightlyRate) + '/night</div></div><button class="btn-primary btn-small" style="min-height:30px;font-size:11px;">Book</button></div>').join('');
+            }
+            html += '</div>';
+            document.getElementById('calendarBookingsList').innerHTML = html;
+        }
+
+        function bookAvailableProperty(propertyId, checkIn, checkOut) {
+            document.getElementById('bookingModalTitle').textContent = 'Add Booking';
+            document.getElementById('bookingForm').reset();
+            document.getElementById('bookingForm').dataset.id = '';
+            document.getElementById('deleteBookingBtn').style.display = 'none';
+            document.getElementById('bookingReceiptBtn').style.display = 'none';
+            document.getElementById('bookingWhatsAppGuestBtn').style.display = 'none';
+            document.getElementById('copyBookingBtn').style.display = 'none';
+            document.getElementById('bookingCustomRate').value = '';
+            renderBookingPropertySelect();
+            document.getElementById('bookingProperty').value = propertyId;
+            document.getElementById('bookingCheckIn').value = checkIn;
+            document.getElementById('bookingCheckOut').value = checkOut;
+            updateBookingCalculations();
+            UI.showModal('bookingModal');
         }
 
         function saveBookingTemplate() {
