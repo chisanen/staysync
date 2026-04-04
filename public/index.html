@@ -268,6 +268,7 @@
             flex: 1;
             overflow-y: auto;
             padding: 16px;
+            position: relative;
         }
 
         .page-content-large {
@@ -1021,6 +1022,31 @@
             display: none;
         }
 
+        .instruction-banner.hidden + .instruction-help-btn {
+            display: flex;
+        }
+
+        .instruction-help-btn {
+            display: none;
+            position: absolute;
+            top: 20px;
+            right: 16px;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            background: rgba(59, 130, 246, 0.1);
+            color: var(--primary);
+            border: 1px solid rgba(59, 130, 246, 0.2);
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+            align-items: center;
+            justify-content: center;
+            z-index: 5;
+            min-height: auto;
+            padding: 0;
+        }
+
         .instruction-banner-text {
             flex: 1;
             line-height: 1.5;
@@ -1622,7 +1648,6 @@
                         <div class="instruction-banner-text">Welcome to Phiyalistings! This is your command center. Today's check-ins and check-outs appear here with one-tap action buttons. Scroll down for revenue charts and upcoming events. Start by adding properties and landlords using the tabs below.</div>
                         <div class="instruction-banner-buttons">
                             <button class="btn-small" onclick="app.dismissInstruction('dashboard')">Got it</button>
-                            <button class="btn-icon btn-small" onclick="app.showInstruction('dashboard')">?</button>
                         </div>
                     </div>
                     
@@ -1700,7 +1725,6 @@
                         <div class="instruction-banner-text">Tap any date to start a booking — tap check-in, then check-out. Switch between Grid, List, and Timeline views using the toggle above. Use Search to find any booking, or tap Available to see which properties are free. Swipe left/right on mobile to change months.</div>
                         <div class="instruction-banner-buttons">
                             <button class="btn-small" onclick="app.dismissInstruction('calendar')">Got it</button>
-                            <button class="btn-icon btn-small" onclick="app.showInstruction('calendar')">?</button>
                         </div>
                     </div>
 
@@ -1765,7 +1789,6 @@
                         <div class="instruction-banner-text">Add all the properties you manage here. Set the nightly rate, cleaning fee, and assign landlords. Upload a photo for each property. Use the filter buttons to view by status. Tap any property to edit or delete it.</div>
                         <div class="instruction-banner-buttons">
                             <button class="btn-small" onclick="app.dismissInstruction('properties')">Got it</button>
-                            <button class="btn-icon btn-small" onclick="app.showInstruction('properties')">?</button>
                         </div>
                     </div>
                     
@@ -1798,7 +1821,7 @@
                         <div class="instruction-banner-text">Add the property owners you work with. Set their payout percentage to calculate how revenue is split. Generate a Portal Link to give landlords read-only access to their bookings and payouts — they can view everything without logging in.</div>
                         <div class="instruction-banner-buttons">
                             <button class="btn-small" onclick="app.dismissInstruction('landlords')">Got it</button>
-                            <button class="btn-icon btn-small" onclick="app.showInstruction('landlords')">?</button>
+
 
                         </div>
                     </div>
@@ -1827,7 +1850,6 @@
                         <div class="instruction-banner-text">Guest profiles are auto-created when you save bookings. Rate guests with stars, mark favorites, or flag problematic ones. Use the Rebook button to quickly create a new booking with a returning guest's details. Filter by Repeat, Flagged, or Favorites.</div>
                         <div class="instruction-banner-buttons">
                             <button class="btn-small" onclick="app.dismissInstruction('guests')">Got it</button>
-                            <button class="btn-icon btn-small" onclick="app.showInstruction('guests')">?</button>
                         </div>
                     </div>
                     
@@ -1856,7 +1878,6 @@
                         <div class="instruction-banner-text">Configure your profile, email notifications (Resend API), WhatsApp messaging, currency, theme, and team members. Use the Data tab to export/import your data for backup. Need help? Tap the Help & Guide button below.</div>
                         <div class="instruction-banner-buttons">
                             <button class="btn-small" onclick="app.dismissInstruction('settings')">Got it</button>
-                            <button class="btn-icon btn-small" onclick="app.showInstruction('settings')">?</button>
                         </div>
                     </div>
                     
@@ -2063,7 +2084,6 @@
                         <div class="instruction-banner-text">Send and manage communications with your landlords. Choose a preset template or write a custom message. Use placeholders like {{guest_name}} and {{property_name}} — they'll be replaced with real data. Click Preview to check your message before sending.</div>
                         <div class="instruction-banner-buttons">
                             <button class="btn-small" onclick="app.dismissInstruction('messages')">Got it</button>
-                            <button class="btn-icon btn-small" onclick="app.showInstruction('messages')">?</button>
                         </div>
                     </div>
 
@@ -2151,7 +2171,6 @@
                         <div class="instruction-banner-text">View monthly revenue by property and payout summaries per landlord. Export data as CSV or send payout summaries directly to landlords via WhatsApp with one tap.</div>
                         <div class="instruction-banner-buttons">
                             <button class="btn-small" onclick="app.dismissInstruction('reports')">Got it</button>
-                            <button class="btn-icon btn-small" onclick="app.showInstruction('reports')">?</button>
                         </div>
                     </div>
                     <div class="form-group" style="max-width:200px;">
@@ -5502,7 +5521,19 @@ ${b.notes ? 'Notes: ' + b.notes : ''}`;
             screens.forEach(screen => {
                 const key = `instruction_dismissed_${screen}`;
                 const banner = document.getElementById(`${screen}Instruction`);
-                if (banner && localStorage.getItem(key)) {
+                if (!banner) return;
+
+                // Add a "?" help button after the banner that shows when banner is dismissed
+                if (!banner.nextElementSibling?.classList?.contains('instruction-help-btn')) {
+                    const helpBtn = document.createElement('button');
+                    helpBtn.className = 'instruction-help-btn';
+                    helpBtn.textContent = '?';
+                    helpBtn.title = 'Show instructions';
+                    helpBtn.onclick = () => app.showInstruction(screen);
+                    banner.parentNode.insertBefore(helpBtn, banner.nextSibling);
+                }
+
+                if (localStorage.getItem(key)) {
                     banner.classList.add('hidden');
                 }
             });

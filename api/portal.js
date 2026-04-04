@@ -1,6 +1,9 @@
 import { neon } from '@neondatabase/serverless';
+import { getAuthenticatedUser, getEffectiveUserId } from './_lib/auth.js';
+import crypto from 'crypto';
 
-export default async function handler(req, res) {
+// --- action: data ---
+async function handleData(req, res) {
   if (req.method !== 'GET') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
@@ -13,7 +16,6 @@ export default async function handler(req, res) {
   const sql = neon(process.env.DATABASE_URL);
 
   try {
-    // Look up landlord by portal_token
     const landlords = await sql(
       `SELECT * FROM landlords WHERE portal_token = $1`,
       [token]
@@ -25,7 +27,6 @@ export default async function handler(req, res) {
 
     const landlord = landlords[0];
 
-    // Fetch properties linked to this landlord
     const properties = await sql(
       `SELECT p.*
        FROM properties p
@@ -37,7 +38,6 @@ export default async function handler(req, res) {
 
     const propertyIds = properties.map(p => p.id);
 
-    // Fetch bookings for those properties
     let bookings = [];
     if (propertyIds.length > 0) {
       bookings = await sql(
@@ -50,13 +50,11 @@ export default async function handler(req, res) {
       );
     }
 
-    // Revenue summary
     const totalRevenue = bookings.reduce((sum, b) => sum + Number(b.total_revenue || 0), 0);
     const totalPayout = bookings.reduce((sum, b) => sum + Number(b.landlord_payout || 0), 0);
     const totalManagementFee = bookings.reduce((sum, b) => sum + Number(b.management_fee || 0), 0);
     const activeBookings = bookings.filter(b => b.status !== 'Cancelled').length;
 
-    // Strip sensitive fields from landlord
     const { portal_token, user_id, ...landlordInfo } = landlord;
 
     return res.status(200).json({
@@ -74,5 +72,64 @@ export default async function handler(req, res) {
   } catch (error) {
     console.error('Error fetching portal data:', error);
     return res.status(500).json({ error: 'Failed to fetch portal data' });
+  }
+}
+
+// --- action: generate ---
+async function handleGenerate(req, res) {
+  if (req.method !== 'POST') {
+    return res.status(405).json({ error: 'Method not allowed' });
+  }
+
+  const user = await getAuthenticatedUser(req);
+  if (!user) return res.status(401).json({ error: 'Unauthorized' });
+
+  const { userId } = await getEffectiveUserId(user.id);
+  const sql = neon(process.env.DATABASE_URL);
+
+  const { landlordId } = req.body;
+  if (!landlordId) {
+    return res.status(400).json({ error: 'Missing required field: landlordId' });
+  }
+
+  try {
+    const landlords = await sql(
+      `SELECT id FROM landlords WHERE id = $1 AND user_id = $2`,
+      [landlordId, userId]
+    );
+
+    if (landlords.length === 0) {
+      return res.status(404).json({ error: 'Landlord not found' });
+    }
+
+    const portalToken = crypto.randomUUID();
+
+    await sql(
+      `UPDATE landlords SET portal_token = $1, updated_at = NOW() WHERE id = $2`,
+      [portalToken, landlordId]
+    );
+
+    const protocol = req.headers['x-forwarded-proto'] || 'https';
+    const host = req.headers['x-forwarded-host'] || req.headers.host;
+    const url = `${protocol}://${host}/portal.html?token=${portalToken}`;
+
+    return res.status(200).json({ token: portalToken, url });
+  } catch (error) {
+    console.error('Error generating portal token:', error);
+    return res.status(500).json({ error: 'Failed to generate portal token' });
+  }
+}
+
+// --- Router ---
+export default async function handler(req, res) {
+  const action = req.query.action;
+
+  switch (action) {
+    case 'data':
+      return handleData(req, res);
+    case 'generate':
+      return handleGenerate(req, res);
+    default:
+      return res.status(400).json({ error: `Unknown portal action: ${action}` });
   }
 }
