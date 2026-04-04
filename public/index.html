@@ -160,7 +160,6 @@
             height: 70px;
             background: var(--surface);
             border-top: 1px solid var(--border);
-            display: flex;
             justify-content: space-around;
             align-items: stretch;
             z-index: 100;
@@ -643,6 +642,16 @@
         .badge-cancelled {
             background: rgba(220, 38, 38, 0.2);
             color: var(--danger);
+        }
+
+        .badge-checked-in {
+            background: rgba(22, 163, 74, 0.2);
+            color: var(--success);
+        }
+
+        .badge-checked-out {
+            background: rgba(100, 116, 139, 0.2);
+            color: var(--text-secondary);
         }
 
         /* CALENDAR */
@@ -2942,10 +2951,8 @@
         // ===== ACTIVITY LOG =====
         const ActivityLog = {
             add(type, description, relatedId = null) {
-                const logs = DB.getAll('activity');
                 const id = crypto.randomUUID();
-                logs[id] = { id, type, description, timestamp: new Date().toISOString(), relatedId };
-                localStorage.setItem('activity', JSON.stringify(logs));
+                DB.save('activity', id, { type, description, relatedId, timestamp: new Date().toISOString() });
             }
         };
 
@@ -3102,15 +3109,15 @@
                 return `<div class="guest-card" onclick="editGuest('${guest.id}')">
                     <div class="guest-info">
                         <div class="guest-name">
-                            ${guest.name}
+                            ${escapeHtml(guest.name)}
                             ${isRepeat ? '<span class="guest-badge">Repeat Guest (' + guestBookings.length + ')</span>' : ''}
                             ${flagIcon}${favIcon}
                         </div>
                         <div class="guest-subtitle">
-                            ${guest.email ? guest.email + ' • ' : ''}${guest.phone || ''}${starHtml}
+                            ${guest.email ? escapeHtml(guest.email) + ' • ' : ''}${escapeHtml(guest.phone) || ''}${starHtml}
                         </div>
                         <div class="guest-subtitle" style="margin-top: 6px; font-size: 11px;">
-                            ${guest.nationality ? guest.nationality + ' • ' : ''}${guest.idType ? guest.idType.replace('_', ' ').toUpperCase() : ''}
+                            ${guest.nationality ? escapeHtml(guest.nationality) + ' • ' : ''}${guest.idType ? escapeHtml(guest.idType).replace('_', ' ').toUpperCase() : ''}
                         </div>
                     </div>
                     <div class="guest-actions">
@@ -3319,8 +3326,8 @@
                 <div class="reminder-item ${event.type}">
                     <div class="reminder-icon">${event.icon}</div>
                     <div class="reminder-content">
-                        <div class="reminder-title">${event.title}</div>
-                        <div class="reminder-subtitle">${event.subtitle}</div>
+                        <div class="reminder-title">${escapeHtml(event.title)}</div>
+                        <div class="reminder-subtitle">${escapeHtml(event.subtitle)}</div>
                     </div>
                     ${event.type === 'checkin' ? `<button class="btn-success btn-small" onclick="quickStatusChange('${event.bookingId}','Checked In')" style="white-space:nowrap;">Check In</button>` : ''}
                     ${event.type === 'checkout' ? `<button class="btn-small" style="background:var(--warning);color:white;white-space:nowrap;" onclick="quickStatusChange('${event.bookingId}','Checked Out')">Check Out</button>` : ''}
@@ -3359,7 +3366,8 @@
         function initReminders() {
             renderReminders();
             // Update every minute
-            setInterval(renderReminders, 60000);
+            if (window._reminderInterval) clearInterval(window._reminderInterval);
+            window._reminderInterval = setInterval(renderReminders, 60000);
         }
 
         async function initAuth() {
@@ -3399,6 +3407,8 @@
         }
 
         async function init() {
+            if (window._initialized) return;
+            window._initialized = true;
             await DB.init();
             initCalendar();
             initNavigation();
@@ -3414,7 +3424,6 @@
             initInstructionBanners();
             initPropertyImageUpload();
             initMessageTemplates();
-            populateLandlordCheckboxes();
             renderMessageHistory();
             displayApiStatus();
             initReports();
@@ -3452,7 +3461,7 @@
 
             document.querySelectorAll('.modal-overlay').forEach(modal => {
                 modal.addEventListener('click', (e) => {
-                    if (e.target === modal) UI.hideModal(modal.id);
+                    if (e.target === modal && modal.id !== 'authModal') UI.hideModal(modal.id);
                 });
             });
         }
@@ -3469,25 +3478,25 @@
             document.getElementById('statLandlords').textContent = landlords.length;
 
             const thisMonth = bookings.filter(b => {
-                const month = b.checkIn.slice(0, 7);
+                const month = (b.checkIn || '').slice(0, 7);
                 return month === today.slice(0, 7);
             }).length;
             document.getElementById('statBookings').textContent = thisMonth;
 
             const thisMonthRevenue = bookings
-                .filter(b => b.checkIn.slice(0, 7) === today.slice(0, 7))
+                .filter(b => (b.checkIn || '').slice(0, 7) === today.slice(0, 7))
                 .reduce((sum, b) => sum + (b.totalRevenue || 0), 0);
             document.getElementById('statRevenue').textContent = UI.formatCurrency(thisMonthRevenue);
 
-            const todayCheckIns = bookings.filter(b => b.checkIn === today && b.status !== 'Cancelled');
-            const todayCheckOuts = bookings.filter(b => b.checkOut === today && b.status !== 'Cancelled');
+            const todayCheckIns = bookings.filter(b => (b.checkIn || '') === today && b.status !== 'Cancelled');
+            const todayCheckOuts = bookings.filter(b => (b.checkOut || '') === today && b.status !== 'Cancelled');
 
             let todayHtml = '';
             if (todayCheckIns.length) {
                 todayHtml += '<div style="margin-bottom:12px;"><strong>Check-ins (' + todayCheckIns.length + ')</strong></div>';
                 todayHtml += todayCheckIns.map(b => {
                     const prop = DB.get('properties', b.propertyId);
-                    return '<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border);"><div style="flex:1;"><div style="font-weight:600;font-size:13px;">' + b.guestName + '</div><div style="font-size:12px;color:var(--text-secondary);">' + (prop?.name || '') + '</div></div>' +
+                    return '<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border);"><div style="flex:1;"><div style="font-weight:600;font-size:13px;">' + escapeHtml(b.guestName) + '</div><div style="font-size:12px;color:var(--text-secondary);">' + escapeHtml(prop?.name || '') + '</div></div>' +
                     (b.status === 'Confirmed' ? '<button class="btn-success btn-small" onclick="quickStatusChange(\'' + b.id + '\',\'Checked In\')" style="min-height:32px;">Check In</button>' : '<span class="list-item-badge badge-confirmed" style="font-size:11px;">' + b.status + '</span>') + '</div>';
                 }).join('');
             }
@@ -3495,7 +3504,7 @@
                 todayHtml += '<div style="margin-bottom:12px;margin-top:12px;"><strong>Check-outs (' + todayCheckOuts.length + ')</strong></div>';
                 todayHtml += todayCheckOuts.map(b => {
                     const prop = DB.get('properties', b.propertyId);
-                    return '<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border);"><div style="flex:1;"><div style="font-weight:600;font-size:13px;">' + b.guestName + '</div><div style="font-size:12px;color:var(--text-secondary);">' + (prop?.name || '') + '</div></div>' +
+                    return '<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border);"><div style="flex:1;"><div style="font-weight:600;font-size:13px;">' + escapeHtml(b.guestName) + '</div><div style="font-size:12px;color:var(--text-secondary);">' + escapeHtml(prop?.name || '') + '</div></div>' +
                     (b.status === 'Checked In' ? '<button class="btn-small" style="background:var(--warning);color:white;min-height:32px;" onclick="quickStatusChange(\'' + b.id + '\',\'Checked Out\')">Check Out</button>' : '<span class="list-item-badge" style="font-size:11px;">' + b.status + '</span>') + '</div>';
                 }).join('');
             }
@@ -3512,8 +3521,8 @@
                 document.getElementById('upcomingBookings').innerHTML = upcomingList.map(b => {
                     const prop = DB.get('properties', b.propertyId);
                     return `<div style="padding: 8px 0; border-bottom: 1px solid var(--border);">
-                        <div style="font-weight: 600; font-size: 13px;">${b.guestName}</div>
-                        <div style="font-size: 12px; color: var(--text-secondary);">${prop?.name} • ${UI.formatDate(b.checkIn)}</div>
+                        <div style="font-weight: 600; font-size: 13px;">${escapeHtml(b.guestName)}</div>
+                        <div style="font-size: 12px; color: var(--text-secondary);">${escapeHtml(prop?.name)} • ${UI.formatDate(b.checkIn)}</div>
                     </div>`;
                 }).join('');
             }
@@ -3705,8 +3714,8 @@
 
                 return `<div class="list-item" data-id="${prop.id}">
                     <div class="list-item-content">
-                        <div class="list-item-title">${prop.name}</div>
-                        <div class="list-item-subtitle">${prop.type} • ${prop.bedrooms}BR ${prop.bathrooms}BA</div>
+                        <div class="list-item-title">${escapeHtml(prop.name)}</div>
+                        <div class="list-item-subtitle">${escapeHtml(prop.type)} • ${prop.bedrooms}BR ${prop.bathrooms}BA</div>
                         <div style="margin-top: 8px; display: flex; gap: 8px;">
                             <span class="list-item-badge" style="background-color: ${prop.color}40; color: ${prop.color};">${UI.formatCurrency(prop.nightlyRate)}/night</span>
                             <span class="list-item-badge badge-${prop.status.toLowerCase()}">${prop.status}</span>
@@ -3724,19 +3733,20 @@
                     document.getElementById('propertyModalTitle').textContent = 'Edit Property';
                     document.getElementById('propName').value = prop.name;
                     document.getElementById('propType').value = prop.type;
-                    document.getElementById('propStreet').value = prop.address.street;
-                    document.getElementById('propCity').value = prop.address.city;
-                    document.getElementById('propState').value = prop.address.state;
-                    document.getElementById('propZip').value = prop.address.zip;
+                    const addr = prop.address || {};
+                    document.getElementById('propStreet').value = addr.street;
+                    document.getElementById('propCity').value = addr.city;
+                    document.getElementById('propState').value = addr.state;
+                    document.getElementById('propZip').value = addr.zip;
                     document.getElementById('propBedrooms').value = prop.bedrooms;
                     document.getElementById('propBathrooms').value = prop.bathrooms;
                     document.getElementById('propMaxGuests').value = prop.maxGuests;
                     document.getElementById('propNightlyRate').value = prop.nightlyRate / 100;
                     document.getElementById('propCleaningFee').value = prop.cleaningFee / 100;
                     document.getElementById('propStatus').value = prop.status;
-                    document.getElementById('propCheckIn').value = prop.checkInTime;
-                    document.getElementById('propCheckOut').value = prop.checkOutTime;
-                    document.getElementById('propNotes').value = prop.notes;
+                    document.getElementById('propCheckIn').value = prop.checkInTime || '';
+                    document.getElementById('propCheckOut').value = prop.checkOutTime || '';
+                    document.getElementById('propNotes').value = prop.notes || '';
                     document.getElementById('propertyForm').dataset.id = id;
                     document.getElementById('deletePropertyBtn').style.display = 'flex';
                     document.getElementById('propertyImageData').value = prop.image || '';
@@ -3801,7 +3811,7 @@
             let landlords = DB.getList('landlords');
 
             if (search) {
-                landlords = landlords.filter(ll => ll.name.toLowerCase().includes(search) || ll.email.toLowerCase().includes(search));
+                landlords = landlords.filter(ll => (ll.name || '').toLowerCase().includes(search) || (ll.email || '').toLowerCase().includes(search));
             }
 
             const html = landlords.map(ll => {
@@ -3813,8 +3823,8 @@
 
                 return `<div class="list-item" data-id="${ll.id}">
                     <div class="list-item-content">
-                        <div class="list-item-title">${ll.name}</div>
-                        <div class="list-item-subtitle">${ll.email}</div>
+                        <div class="list-item-title">${escapeHtml(ll.name)}</div>
+                        <div class="list-item-subtitle">${escapeHtml(ll.email)}</div>
                         <div style="margin-top: 8px; display: flex; gap: 8px;">
                             <span class="list-item-badge" style="background: var(--bg);">${propCount} properties</span>
                             <span class="list-item-badge" style="background: var(--bg);">${ll.payoutPercent}% payout</span>
@@ -3832,10 +3842,10 @@
                     document.getElementById('landlordModalTitle').textContent = 'Edit Landlord';
                     document.getElementById('llName').value = ll.name;
                     document.getElementById('llEmail').value = ll.email;
-                    document.getElementById('llPhone').value = ll.phone;
-                    document.getElementById('llCompany').value = ll.company;
+                    document.getElementById('llPhone').value = ll.phone || '';
+                    document.getElementById('llCompany').value = ll.company || '';
                     document.getElementById('llPayoutPercent').value = ll.payoutPercent;
-                    document.getElementById('llNotes').value = ll.notes;
+                    document.getElementById('llNotes').value = ll.notes || '';
                     document.getElementById('landlordForm').dataset.id = id;
                     document.getElementById('deleteLandlordBtn').style.display = 'flex';
                     document.getElementById('portalShareDiv').style.display = 'block';
@@ -3877,6 +3887,8 @@
                 renderBookingPropertySelect();
                 UI.showModal('bookingModal');
             });
+
+            document.getElementById('propertyFilterSelect').addEventListener('change', renderCalendar);
 
             document.querySelectorAll('#calendarViewToggle button').forEach(btn => {
                 btn.addEventListener('click', () => {
@@ -4195,6 +4207,7 @@
                 const id = document.getElementById('bookingForm').dataset.id || crypto.randomUUID();
                 const propertyId = document.getElementById('bookingProperty').value;
                 const prop = DB.get('properties', propertyId);
+                if (!prop) { UI.toast('Property not found', 'error'); return; }
                 const customRate = document.getElementById('bookingCustomRate').value;
 
                 const data = {
@@ -4450,7 +4463,7 @@ ${b.notes ? 'Notes: ' + b.notes : ''}`;
             const mailtoLink = `mailto:${landlord.email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(plainText)}`;
             const toast = document.createElement('div');
             toast.className = 'toast';
-            toast.style.cssText = 'padding:12px 16px;display:flex;flex-direction:column;gap:8px;';
+            toast.style.cssText = 'position:fixed;bottom:100px;left:12px;right:12px;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:12px 16px;display:flex;flex-direction:column;gap:8px;z-index:3000;box-shadow:0 4px 20px rgba(0,0,0,0.15);';
             toast.innerHTML = `
                 <div style="font-size:13px;">Email to ${landlord.name} ready</div>
                 <div style="display:flex;gap:8px;">
@@ -4555,8 +4568,10 @@ ${b.notes ? 'Notes: ' + b.notes : ''}`;
             if (!propertyId) return;
 
             const prop = DB.get('properties', propertyId);
+            if (!prop) return;
             const checkIn = document.getElementById('bookingCheckIn').value;
             const checkOut = document.getElementById('bookingCheckOut').value;
+            if (!checkIn || !checkOut) return;
             const serviceFee = Math.round(parseFloat(document.getElementById('bookingServiceFee').value || 0) * 100);
             const taxAmount = Math.round(parseFloat(document.getElementById('bookingTaxAmount').value || 0) * 100);
 
@@ -4597,7 +4612,9 @@ ${b.notes ? 'Notes: ' + b.notes : ''}`;
         }
 
         function editBooking(bookingId) {
+            renderBookingPropertySelect();
             const booking = DB.get('bookings', bookingId);
+            if (!booking) return;
             document.getElementById('bookingModalTitle').textContent = 'Edit Booking';
             document.getElementById('bookingProperty').value = booking.propertyId;
             document.getElementById('bookingCheckIn').value = booking.checkIn;
@@ -4703,7 +4720,7 @@ ${b.notes ? 'Notes: ' + b.notes : ''}`;
                 const file = document.getElementById('importDataFile').files[0];
                 if (!file) return;
                 const reader = new FileReader();
-                reader.onload = (e) => {
+                reader.onload = async (e) => {
                     try {
                         const data = JSON.parse(e.target.result);
                         if (data.properties) localStorage.setItem('properties', JSON.stringify(data.properties));
@@ -4712,6 +4729,15 @@ ${b.notes ? 'Notes: ' + b.notes : ''}`;
                         if (data.guests) localStorage.setItem('staysync_guests', JSON.stringify(data.guests));
                         if (data.activity) localStorage.setItem('activity', JSON.stringify(data.activity));
                         if (data.messageHistory) localStorage.setItem('messageHistory', JSON.stringify(data.messageHistory));
+                        // Sync imported data to server
+                        try {
+                            await fetch('/api/db/migrate', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                credentials: 'include',
+                                body: JSON.stringify(data)
+                            });
+                        } catch(e) {}
                         alert('Data imported successfully');
                         location.reload();
                     } catch (err) {
@@ -4861,6 +4887,11 @@ ${b.notes ? 'Notes: ' + b.notes : ''}`;
                 clearTimeout(timeout);
                 timeout = setTimeout(() => fn.apply(this, args), ms);
             };
+        }
+
+        function escapeHtml(str) {
+            if (!str) return '';
+            return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
         }
 
         function getPropertyColor(index) {
@@ -5250,7 +5281,7 @@ ${b.notes ? 'Notes: ' + b.notes : ''}`;
                     },
                     body: JSON.stringify({
                         from: from,
-                        to: to,
+                        to: Array.isArray(to) ? to : [to],
                         subject: subject,
                         html: html
                     })
@@ -5415,7 +5446,7 @@ ${b.notes ? 'Notes: ' + b.notes : ''}`;
             
             recipients.forEach(landlord => {
                 const msgId = crypto.randomUUID();
-                messageHistory[msgId] = {
+                DB.save('messageHistory', msgId, {
                     id: msgId,
                     recipient: landlord.name,
                     recipientEmail: landlord.email,
@@ -5423,14 +5454,12 @@ ${b.notes ? 'Notes: ' + b.notes : ''}`;
                     body: body,
                     sentAt: new Date().toISOString(),
                     status: 'sent'
-                };
+                });
             });
-            
-            localStorage.setItem('messageHistory', JSON.stringify(messageHistory));
             
             // Try to send via email if API key is set
             if (settings.resendApiKey && settings.fromEmail) {
-                recipients.forEach(landlord => {
+                recipients.filter(ll => ll.email).forEach(landlord => {
                     sendEmailViaResend(
                         settings.fromEmail,
                         landlord.email,
@@ -5444,6 +5473,11 @@ ${b.notes ? 'Notes: ' + b.notes : ''}`;
             alert('Message sent to ' + recipients.length + ' recipient(s)!');
             document.getElementById('templateForm').reset();
             document.getElementById('templatePreviewArea').innerHTML = '';
+            const defaultTemplate = messageTemplates['new_booking'];
+            if (defaultTemplate) {
+                document.getElementById('msgSubject').value = defaultTemplate.subject;
+                document.getElementById('msgBody').value = defaultTemplate.body;
+            }
         }
 
         // Render message history
@@ -5460,10 +5494,10 @@ ${b.notes ? 'Notes: ' + b.notes : ''}`;
             historyList.innerHTML = messages.slice().reverse().map(msg => `
                 <div class="message-item">
                     <div class="message-item-header">
-                        <div class="message-item-recipient">${msg.recipient}</div>
+                        <div class="message-item-recipient">${escapeHtml(msg.recipient)}</div>
                         <div class="message-item-status ${msg.status}">${msg.status.toUpperCase()}</div>
                     </div>
-                    <div class="message-item-subject">${msg.subject}</div>
+                    <div class="message-item-subject">${escapeHtml(msg.subject)}</div>
                     <div class="message-item-date">${new Date(msg.sentAt).toLocaleString()}</div>
                 </div>
             `).join('');
