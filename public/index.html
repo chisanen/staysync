@@ -172,6 +172,7 @@
 
         .bottom-nav button {
             flex: 1;
+            min-width: 0;
             background: none;
             border: none;
             color: var(--text-secondary);
@@ -180,10 +181,11 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            gap: 4px;
-            font-size: 11px;
+            gap: 2px;
+            font-size: 10px;
             transition: all 150ms;
             border-top: 3px solid transparent;
+            padding: 0 2px;
         }
 
         .bottom-nav button:hover {
@@ -196,8 +198,8 @@
         }
 
         .bottom-nav svg {
-            width: 24px;
-            height: 24px;
+            width: 22px;
+            height: 22px;
         }
 
         /* OFFLINE BANNER */
@@ -1387,7 +1389,19 @@
 
         .guest-actions {
             display: flex;
-            gap: 6px;
+            gap: 4px;
+            flex-shrink: 0;
+        }
+
+        .guest-actions .btn-icon {
+            width: 36px;
+            min-height: 36px;
+            padding: 6px;
+        }
+
+        .guest-actions .btn-icon svg {
+            width: 18px;
+            height: 18px;
         }
 
         /* REMINDER/NOTIFICATION STYLES */
@@ -1480,11 +1494,11 @@
     <div class="offline-banner" id="offlineBanner">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="1"></circle><path d="M12 8v-2"></path><path d="M4.22 4.22a8 8 0 1 0 11.56 0"></path></svg>
         <span>You're offline. Changes will sync when online.</span>
+    </div>
 
     <div class="success-banner" id="successBanner">
         <svg viewBox="0 0 24 24" fill="currentColor"><path d="M20.854 5.354a1 1 0 0 0-1.414-1.414l-8.485 8.485-3.889-3.889a1 1 0 0 0-1.414 1.414l4.596 4.596a1 1 0 0 0 1.414 0l9.192-9.192z"/></svg>
         <span id="successBannerText">Account created successfully! You can now log in.</span>
-    </div>
     </div>
 
     <div class="app-container">
@@ -1512,6 +1526,10 @@
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
                     Guests
                 </button>
+                <button data-page="messages">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22 6 12 13 2 6"></polyline></svg>
+                    Messages
+                </button>
                 <button data-page="settings">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M12 1v6m0 6v6M4.22 4.22l4.24 4.24m6.08 0l4.24-4.24M1 12h6m6 0h6m-1.78 7.78l-4.24-4.24m-6.08 0l-4.24 4.24"></path></svg>
                     Settings
@@ -1529,7 +1547,7 @@
                 <div class="page-content">
                     <!-- TODAY'S ACTIVITY -->
                     <div class="instruction-banner" id="dashboardInstruction">
-                        <div class="instruction-banner-text">Welcome to StaySync! This is your command center. You'll see today's check-ins/outs, upcoming bookings, and key stats. Start by adding your properties and landlords using the tabs below.</div>
+                        <div class="instruction-banner-text">Welcome to Phiyalistings! This is your command center. You'll see today's check-ins/outs, upcoming bookings, and key stats. Start by adding your properties and landlords using the tabs below.</div>
                         <div class="instruction-banner-buttons">
                             <button class="btn-small" onclick="app.dismissInstruction('dashboard')">Got it</button>
                             <button class="btn-icon btn-small" onclick="app.showInstruction('dashboard')">?</button>
@@ -1678,11 +1696,12 @@
                     </button>
                 </div>
                 <div class="page-content">
-                    <div class="instruction-banner" id="landlordInstruction">
+                    <div class="instruction-banner" id="landlordsInstruction">
                         <div class="instruction-banner-text">Add the property owners you work with. Each landlord needs a name and email address for notifications. Their payout percentage determines how much of each booking's revenue goes to them.</div>
                         <div class="instruction-banner-buttons">
                             <button class="btn-small" onclick="app.dismissInstruction('landlords')">Got it</button>
                             <button class="btn-icon btn-small" onclick="app.showInstruction('landlords')">?</button>
+
                         </div>
                     </div>
                     
@@ -1886,7 +1905,7 @@
                         </div>
 
                         <div class="card" style="margin-top: 20px;">
-                            <h3 style="font-weight: 600; margin-bottom: 12px;">About StaySync</h3>
+                            <h3 style="font-weight: 600; margin-bottom: 12px;">About Phiyalistings</h3>
                             <div style="font-size: 13px; color: var(--text-secondary);">
                                 <p style="margin-bottom: 8px;">Version 1.0.0</p>
                                 <p style="margin-bottom: 8px;">A production-quality Airbnb booking management platform optimized for mobile and offline usage.</p>
@@ -1901,9 +1920,6 @@
                     </div>
                 </div>
             </div>
-        </div>
-
-
 
             <!-- MESSAGES PAGE -->
             <div id="messages" class="page">
@@ -1992,12 +2008,16 @@
                     </div>
                 </div>
             </div>
+        </div>
 
         <!-- FLOATING ACTION BUTTONS -->
         <button class="fab" id="addPropertyFab" onclick="openPropertyModal()" style="display: none;">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
         </button>
         <button class="fab" id="addLandlordFab" onclick="openLandlordModal()" style="display: none;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+        </button>
+        <button class="fab" id="addGuestFab" onclick="openGuestModal()" style="display: none;">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
         </button>
 
@@ -2023,6 +2043,10 @@
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle></svg>
                 <span>Guests</span>
                 </button>
+                <button data-page="messages">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22 6 12 13 2 6"></polyline></svg>
+                <span>Messages</span>
+            </button>
                 <button data-page="settings">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M12 1v6m0 6v6M4.22 4.22l4.24 4.24m6.08 0l4.24-4.24M1 12h6m6 0h6m-1.78 7.78l-4.24-4.24m-6.08 0l-4.24 4.24"></path></svg>
                 <span>Settings</span>
@@ -2219,7 +2243,7 @@
                     <div class="form-group">
                         <label>Cleaning Fee</label>
                         <div style="display: flex; gap: 8px;">
-                            <span style="display: flex; align-items: center; padding: 0 12px; background: var(--bg); border-radius: 8px; font-weight: 600;">₦</span>
+                            <span style="display: flex; align-items: center; padding: 0 12px; background: var(--bg); border-radius: 8px; font-weight: 600;" id="currencySymbolClean">₦</span>
                             <input type="number" id="propCleaningFee" min="0" step="100" value="2000" style="flex: 1;">
                         </div>
                     </div>
@@ -2676,6 +2700,15 @@
             formatTime(timeStr) {
                 if (!timeStr) return '';
                 return timeStr;
+            },
+
+            toast(message, type = 'info') {
+                const toast = document.createElement('div');
+                toast.style.cssText = 'position:fixed;top:20px;left:50%;transform:translateX(-50%);padding:12px 24px;border-radius:8px;color:white;font-size:14px;font-weight:600;z-index:3000;box-shadow:0 4px 12px rgba(0,0,0,0.15);animation:slideDown 300ms ease-out;max-width:90vw;text-align:center;';
+                toast.style.background = type === 'success' ? 'var(--success)' : type === 'error' ? 'var(--danger)' : 'var(--primary)';
+                toast.textContent = message;
+                document.body.appendChild(toast);
+                setTimeout(() => { toast.style.opacity = '0'; toast.style.transition = 'opacity 300ms'; setTimeout(() => toast.remove(), 300); }, 3000);
             }
         };
 
@@ -2728,14 +2761,17 @@
             const filterType = document.querySelector('#guests .filter-btn.active')?.dataset.filter || 'all';
             const bookings = DB.getList('bookings');
 
-            let filtered = guests.filter(guest => 
-                guest.name.toLowerCase().includes(searchTerm) || 
-                guest.email.toLowerCase().includes(searchTerm)
+            let filtered = guests.filter(guest =>
+                (guest.name || '').toLowerCase().includes(searchTerm) ||
+                (guest.email || '').toLowerCase().includes(searchTerm)
             );
 
             if (filterType === 'repeat') {
                 filtered = filtered.filter(guest => {
-                    const guestBookings = bookings.filter(b => b.guestEmail === guest.email);
+                    const guestBookings = bookings.filter(b =>
+                        (guest.email && b.guestEmail === guest.email) ||
+                        (guest.name && b.guestName === guest.name)
+                    );
                     return guestBookings.length > 1;
                 });
             }
@@ -2749,7 +2785,10 @@
             }
 
             guestsList.innerHTML = filtered.map(guest => {
-                const guestBookings = bookings.filter(b => b.guestEmail === guest.email);
+                const guestBookings = bookings.filter(b =>
+                    (guest.email && b.guestEmail === guest.email) ||
+                    (guest.name && b.guestName === guest.name)
+                );
                 const isRepeat = guestBookings.length > 1;
                 
                 return `<div class="guest-card" onclick="editGuest('${guest.id}')">
@@ -2847,7 +2886,7 @@
                     events.push({
                         type: 'upcoming',
                         title: 'Upcoming: ' + booking.guestName,
-                        subtitle: property?.name || 'Unknown property' + ' • ' + UI.formatDate(booking.checkIn),
+                        subtitle: (property?.name || 'Unknown property') + ' • ' + UI.formatDate(booking.checkIn),
                         date: booking.checkIn,
                         icon: '📅'
                     });
@@ -2979,6 +3018,7 @@ function initAuth() {
                     if (pageId === 'properties') renderProperties();
                     if (pageId === 'landlords') renderLandlords();
                     if (pageId === 'guests') renderGuests();
+                    if (pageId === 'messages') renderMessageHistory();
                     if (pageId === 'dashboard') { renderDashboard(); renderReminders(); }
                     updateFabVisibility();
                                     });
@@ -3117,6 +3157,7 @@ function initAuth() {
                     checkInTime: document.getElementById('propCheckIn').value || '14:00',
                     checkOutTime: document.getElementById('propCheckOut').value || '11:00',
                     notes: document.getElementById('propNotes').value,
+                    image: document.getElementById('propertyImageData').value || DB.get('properties', id)?.image || null,
                     color: DB.get('properties', id)?.color || getPropertyColor(Object.values(DB.getAll('properties')).length),
                     createdAt: DB.get('properties', id)?.createdAt || new Date().toISOString()
                 };
@@ -3127,9 +3168,9 @@ function initAuth() {
             });
 
             document.getElementById('propertySearch').addEventListener('input', debounce(renderProperties, 300));
-            document.querySelectorAll('[data-filter]').forEach(btn => {
+            document.querySelectorAll('#properties [data-filter]').forEach(btn => {
                 btn.addEventListener('click', function() {
-                    document.querySelectorAll('[data-filter]').forEach(b => b.classList.remove('active'));
+                    document.querySelectorAll('#properties [data-filter]').forEach(b => b.classList.remove('active'));
                     this.classList.add('active');
                     renderProperties();
                 });
@@ -3138,7 +3179,7 @@ function initAuth() {
 
         function renderProperties() {
             const search = document.getElementById('propertySearch').value.toLowerCase();
-            const filter = document.querySelector('[data-filter].active').dataset.filter;
+            const filter = document.querySelector('#properties [data-filter].active')?.dataset.filter || 'all';
             let properties = DB.getList('properties');
 
             if (search) {
@@ -3187,6 +3228,13 @@ function initAuth() {
                     document.getElementById('propCheckOut').value = prop.checkOutTime;
                     document.getElementById('propNotes').value = prop.notes;
                     document.getElementById('propertyForm').dataset.id = id;
+                    document.getElementById('propertyImageData').value = prop.image || '';
+                    const imgPreview = document.getElementById('propertyImagePreview');
+                    if (prop.image) {
+                        imgPreview.innerHTML = '<img src="' + prop.image + '" alt="Property image" style="width:100%;height:100%;object-fit:cover;">';
+                    } else {
+                        imgPreview.innerHTML = '<div class="image-preview-placeholder"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg><span>Click to upload image</span></div>';
+                    }
                     renderLandlordCheckboxes(prop.landlordIds || []);
                     UI.showModal('propertyModal');
                 });
@@ -3494,7 +3542,7 @@ function initAuth() {
                 if (canSendEmail) {
                     try {
                         const emailPayload = {
-                            from: settings.fromEmail || `${settings.managerName || 'StaySync'} <onboarding@resend.dev>`,
+                            from: settings.fromEmail || `${settings.managerName || 'Phiyalistings'} <onboarding@resend.dev>`,
                             to: [landlord.email],
                             subject: subjects[type],
                             html: emailBody
@@ -3518,9 +3566,9 @@ function initAuth() {
                         }
                     } catch (err) {
                         // Queue for retry
-                        const queue = JSON.parse(localStorage.getItem('staysync_email_queue') || '[]');
+                        const queue = JSON.parse(localStorage.getItem('phiyalistings_email_queue') || '[]');
                         queue.push({ landlord, subject: subjects[type], body: emailBody, timestamp: new Date().toISOString() });
-                        localStorage.setItem('staysync_email_queue', JSON.stringify(queue));
+                        localStorage.setItem('phiyalistings_email_queue', JSON.stringify(queue));
                         // Offer mailto fallback
                         offerEmailFallback(landlord, subjects[type], plainText);
                     }
@@ -3588,7 +3636,7 @@ function initAuth() {
                     ${booking.notes ? `<h3 style="margin:0 0 8px;font-size:15px;color:#1e40af;">Notes</h3><p style="margin:0 0 16px;font-size:14px;color:#334155;">${booking.notes}</p>` : ''}
 
                     <div style="margin-top:20px;padding-top:16px;border-top:1px solid #e2e8f0;font-size:12px;color:#94a3b8;">
-                        Sent by ${settings.managerName || 'StaySync'} ${settings.managerEmail ? '(' + settings.managerEmail + ')' : ''} ${settings.managerPhone ? '• ' + settings.managerPhone : ''}
+                        Sent by ${settings.managerName || 'Phiyalistings'} ${settings.managerEmail ? '(' + settings.managerEmail + ')' : ''} ${settings.managerPhone ? '• ' + settings.managerPhone : ''}
                     </div>
                 </div>
             </div>`;
@@ -3596,12 +3644,12 @@ function initAuth() {
 
         function buildPlainText(booking, property, settings, type, nights, curr) {
             const labels = { 'new': 'NEW BOOKING', 'updated': 'BOOKING UPDATED', 'cancelled': 'BOOKING CANCELLED' };
-            return `${labels[type]}\n${'='.repeat(40)}\n\nProperty: ${property.name}\nAddress: ${property.address?.street || ''}, ${property.address?.city || ''} ${property.address?.state || ''}\n\nGuest: ${booking.guestName}\nGuests: ${booking.guestCount}\n${booking.guestEmail ? 'Email: '+booking.guestEmail+'\n' : ''}${booking.guestPhone ? 'Phone: '+booking.guestPhone+'\n' : ''}\nCheck-in: ${booking.checkIn}\nCheck-out: ${booking.checkOut}\nNights: ${nights}\n\nFINANCIAL BREAKDOWN\n${'-'.repeat(30)}\nNightly rate: ${curr}${(booking.nightlyRate/100).toLocaleString()} x ${nights} = ${curr}${((booking.nightlyRate*nights)/100).toLocaleString()}\nCleaning fee: ${curr}${(booking.cleaningFee/100).toLocaleString()}\n${booking.serviceFee ? 'Service fee: '+curr+(booking.serviceFee/100).toLocaleString()+'\n' : ''}${booking.taxAmount ? 'Tax: '+curr+(booking.taxAmount/100).toLocaleString()+'\n' : ''}Total: ${curr}${(booking.totalRevenue/100).toLocaleString()}\nYour Payout: ${curr}${(booking.landlordPayout/100).toLocaleString()}\n${booking.notes ? '\nNotes: '+booking.notes+'\n' : ''}\n--\n${settings.managerName || 'StaySync'} ${settings.managerEmail ? '('+settings.managerEmail+')' : ''} ${settings.managerPhone || ''}`;
+            return `${labels[type]}\n${'='.repeat(40)}\n\nProperty: ${property.name}\nAddress: ${property.address?.street || ''}, ${property.address?.city || ''} ${property.address?.state || ''}\n\nGuest: ${booking.guestName}\nGuests: ${booking.guestCount}\n${booking.guestEmail ? 'Email: '+booking.guestEmail+'\n' : ''}${booking.guestPhone ? 'Phone: '+booking.guestPhone+'\n' : ''}\nCheck-in: ${booking.checkIn}\nCheck-out: ${booking.checkOut}\nNights: ${nights}\n\nFINANCIAL BREAKDOWN\n${'-'.repeat(30)}\nNightly rate: ${curr}${(booking.nightlyRate/100).toLocaleString()} x ${nights} = ${curr}${((booking.nightlyRate*nights)/100).toLocaleString()}\nCleaning fee: ${curr}${(booking.cleaningFee/100).toLocaleString()}\n${booking.serviceFee ? 'Service fee: '+curr+(booking.serviceFee/100).toLocaleString()+'\n' : ''}${booking.taxAmount ? 'Tax: '+curr+(booking.taxAmount/100).toLocaleString()+'\n' : ''}Total: ${curr}${(booking.totalRevenue/100).toLocaleString()}\nYour Payout: ${curr}${(booking.landlordPayout/100).toLocaleString()}\n${booking.notes ? '\nNotes: '+booking.notes+'\n' : ''}\n--\n${settings.managerName || 'Phiyalistings'} ${settings.managerEmail ? '('+settings.managerEmail+')' : ''} ${settings.managerPhone || ''}`;
         }
 
         // Retry queued emails when back online
         window.addEventListener('online', async () => {
-            const queue = JSON.parse(localStorage.getItem('staysync_email_queue') || '[]');
+            const queue = JSON.parse(localStorage.getItem('phiyalistings_email_queue') || '[]');
             if (!queue.length) return;
             const settings = DB.getSetting();
             const isHosted = window.location.hostname !== 'localhost' && !window.location.protocol.startsWith('file');
@@ -3610,14 +3658,14 @@ function initAuth() {
             for (const item of queue) {
                 try {
                     const endpoint = isHosted ? '/api/send-email' : 'https://api.resend.com/emails';
-                    const payload = { from: settings.fromEmail || 'StaySync <onboarding@resend.dev>', to: [item.landlord.email], subject: item.subject, html: item.body };
+                    const payload = { from: settings.fromEmail || 'Phiyalistings <onboarding@resend.dev>', to: [item.landlord.email], subject: item.subject, html: item.body };
                     const headers = isHosted ? { 'Content-Type': 'application/json' } : { 'Authorization': `Bearer ${settings.resendApiKey}`, 'Content-Type': 'application/json' };
                     const res = await fetch(endpoint, { method: 'POST', headers, body: JSON.stringify(payload) });
                     if (res.ok) UI.toast(`Queued email sent to ${item.landlord.name}`, 'success');
                     else remaining.push(item);
                 } catch { remaining.push(item); }
             }
-            localStorage.setItem('staysync_email_queue', JSON.stringify(remaining));
+            localStorage.setItem('phiyalistings_email_queue', JSON.stringify(remaining));
         });
 
         function renderBookingPropertySelect() {
@@ -3690,11 +3738,11 @@ function initAuth() {
 
         // ===== SETTINGS =====
         function initSettings() {
-            document.querySelectorAll('.tab-button').forEach(btn => {
+            document.querySelectorAll('#settings .tab-button').forEach(btn => {
                 btn.addEventListener('click', () => {
                     const tab = btn.dataset.tab;
-                    document.querySelectorAll('.tab-button').forEach(b => b.classList.remove('active'));
-                    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                    document.querySelectorAll('#settings .tab-button').forEach(b => b.classList.remove('active'));
+                    document.querySelectorAll('#settings .tab-content').forEach(c => c.classList.remove('active'));
                     btn.classList.add('active');
                     document.getElementById(tab + 'Tab').classList.add('active');
                 });
@@ -3707,6 +3755,7 @@ function initAuth() {
                     managerEmail: document.getElementById('managerEmail').value,
                     managerPhone: document.getElementById('managerPhone').value
                 });
+                UI.toast('Profile saved', 'success');
             });
 
             document.getElementById('emailForm').addEventListener('submit', (e) => {
@@ -3716,6 +3765,8 @@ function initAuth() {
                     fromEmail: document.getElementById('fromEmail').value,
                     emailSignature: document.getElementById('emailSignature').value
                 });
+                displayApiStatus();
+                UI.toast('Email settings saved', 'success');
             });
 
             document.getElementById('generalForm').addEventListener('submit', (e) => {
@@ -3726,6 +3777,7 @@ function initAuth() {
                     currency: document.getElementById('currencySelect').value
                 });
                 updateCurrencySymbols();
+                UI.toast('Settings saved', 'success');
             });
 
             document.querySelectorAll('[data-theme]').forEach(btn => {
@@ -3751,7 +3803,7 @@ function initAuth() {
                 const url = URL.createObjectURL(blob);
                 const a = document.createElement('a');
                 a.href = url;
-                a.download = `staysync-export-${new Date().toISOString().split('T')[0]}.json`;
+                a.download = `phiyalistings-export-${new Date().toISOString().split('T')[0]}.json`;
                 a.click();
                 URL.revokeObjectURL(url);
             });
@@ -3796,6 +3848,18 @@ function initAuth() {
                 Auth.logout();
             });
 
+            const testEmailBtn = document.getElementById('testEmailBtn');
+            if (testEmailBtn) {
+                testEmailBtn.addEventListener('click', testEmail);
+            }
+
+            const whatsappEnabled = document.getElementById('whatsappEnabled');
+            if (whatsappEnabled) {
+                whatsappEnabled.addEventListener('change', (e) => {
+                    DB.saveSetting({ whatsappEnabled: e.target.checked });
+                });
+            }
+
             loadSettings();
         }
 
@@ -3813,6 +3877,8 @@ function initAuth() {
             document.querySelectorAll('[data-theme]').forEach(btn => {
                 btn.classList.toggle('active', btn.dataset.theme === (settings.theme || 'auto'));
             });
+            const waToggle = document.getElementById('whatsappEnabled');
+            if (waToggle) waToggle.checked = settings.whatsappEnabled || false;
         }
 
         function updateCurrencySymbols() {
@@ -3927,11 +3993,11 @@ function initAuth() {
         // ===== SERVICE WORKER =====
         if ('serviceWorker' in navigator) {
             const swCode = `
-                self.addEventListener('install', e => e.waitUntil(caches.open('staysync-v1').then(c => c.addAll(['/']))));
-                self.addEventListener('activate', e => e.waitUntil(caches.keys().then(keys => Promise.all(keys.map(k => k !== 'staysync-v1' ? caches.delete(k) : null)))));
+                self.addEventListener('install', e => e.waitUntil(caches.open('phiyalistings-v1').then(c => c.addAll(['/']))));
+                self.addEventListener('activate', e => e.waitUntil(caches.keys().then(keys => Promise.all(keys.map(k => k !== 'phiyalistings-v1' ? caches.delete(k) : null)))));
                 self.addEventListener('fetch', e => {
                     if (e.request.method !== 'GET') return;
-                    e.respondWith(caches.match(e.request).then(r => r || fetch(e.request).then(r => caches.open('staysync-v1').then(c => { c.put(e.request, r.clone()); return r; }))).catch(() => new Response('Offline')));
+                    e.respondWith(caches.match(e.request).then(r => r || fetch(e.request).then(r => caches.open('phiyalistings-v1').then(c => { c.put(e.request, r.clone()); return r; }))).catch(() => new Response('Offline')));
                 });
             `;
             const blob = new Blob([swCode], { type: 'application/javascript' });
@@ -3971,7 +4037,7 @@ function initAuth() {
 
         // Initialize instruction banners
         function initInstructionBanners() {
-            const screens = ['dashboard', 'calendar', 'properties', 'landlords', 'guests', 'settings'];
+            const screens = ['dashboard', 'calendar', 'properties', 'landlords', 'guests', 'messages', 'settings'];
             screens.forEach(screen => {
                 const key = `instruction_dismissed_${screen}`;
                 const banner = document.getElementById(`${screen}Instruction`);
@@ -3981,6 +4047,31 @@ function initAuth() {
             });
         }
 
+        // FAB handlers
+        function openPropertyModal() {
+            document.getElementById('propertyModalTitle').textContent = 'Add Property';
+            document.getElementById('propertyForm').reset();
+            document.getElementById('propertyForm').dataset.id = '';
+            document.getElementById('propertyImageData').value = '';
+            document.getElementById('propertyImagePreview').innerHTML = '<div class="image-preview-placeholder"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg><span>Click to upload image</span></div>';
+            renderLandlordCheckboxes();
+            UI.showModal('propertyModal');
+        }
+
+        function openLandlordModal() {
+            document.getElementById('landlordModalTitle').textContent = 'Add Landlord';
+            document.getElementById('landlordForm').reset();
+            document.getElementById('landlordForm').dataset.id = '';
+            UI.showModal('landlordModal');
+        }
+
+        function openGuestModal() {
+            document.getElementById('guestModalTitle').textContent = 'Add Guest';
+            document.getElementById('guestForm').reset();
+            document.getElementById('guestForm').dataset.id = '';
+            UI.showModal('guestModal');
+        }
+
         // FAB visibility
         function updateFabVisibility() {
             const currentPage = document.querySelector('.page.active');
@@ -3988,6 +4079,7 @@ function initAuth() {
             
             document.getElementById('addPropertyFab').style.display = pageId === 'properties' ? 'flex' : 'none';
             document.getElementById('addLandlordFab').style.display = pageId === 'landlords' ? 'flex' : 'none';
+            document.getElementById('addGuestFab').style.display = pageId === 'guests' ? 'flex' : 'none';
         }
 
         // Image upload for properties
@@ -4166,6 +4258,16 @@ function initAuth() {
 
         // Initialize message template handling
         function initMessageTemplates() {
+            // Messages page tab switching
+            document.querySelectorAll('#messages .tab-button').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    document.querySelectorAll('#messages .tab-button').forEach(b => b.classList.remove('active'));
+                    document.querySelectorAll('#messages .tab-content').forEach(c => c.classList.remove('active'));
+                    btn.classList.add('active');
+                    document.getElementById(btn.dataset.tab + 'Tab').classList.add('active');
+                });
+            });
+
             const templateSelect = document.getElementById('templateSelect');
             if (templateSelect) {
                 templateSelect.addEventListener('change', (e) => {
@@ -4194,6 +4296,11 @@ function initAuth() {
                     const specificDiv = document.getElementById('specificLandlordDiv');
                     if (specificDiv) {
                         specificDiv.style.display = e.target.value === 'specific' ? 'block' : 'none';
+                    }
+                    if (e.target.value === 'specific') {
+                        const landlords = DB.getList('landlords');
+                        const sel = document.getElementById('msgLandlord');
+                        sel.innerHTML = landlords.map(ll => '<option value="' + ll.id + '">' + ll.name + '</option>').join('');
                     }
                 });
             }
@@ -4314,7 +4421,7 @@ function initAuth() {
         function getWhatsAppButton(landlord) {
             if (!landlord.phone) return '';
             
-            const message = encodeURIComponent('Hello ' + landlord.name + ', this is from StaySync.');
+            const message = encodeURIComponent('Hello ' + landlord.name + ', this is from Phiyalistings.');
             return `<a href="https://wa.me/${landlord.phone.replace(/[^0-9]/g, '')}?text=${message}" target="_blank" class="btn-whatsapp btn-small">
                 <svg viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.67-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.076 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421-7.403h-.004a9.87 9.87 0 00-5.031 1.378c-3.055 2.364-3.905 6.75-1.907 10.93 1.9 3.968 6.287 5.556 10.254 3.656 3.968-1.9 5.556-6.287 3.656-10.254-1.9-3.968-6.287-5.556-10.254-3.656l.004.001z"></path></svg>
             </a>`;
@@ -4323,30 +4430,4 @@ function initAuth() {
     </script>
 </body>
 </html>
-            const testEmailBtn = document.getElementById('testEmailBtn');
-            if (testEmailBtn) {
-                testEmailBtn.addEventListener('click', testEmail);
-            }
-
-            const whatsappEnabled = document.getElementById('whatsappEnabled');
-            if (whatsappEnabled) {
-                whatsappEnabled.checked = DB.getSetting().whatsappEnabled || false;
-                whatsappEnabled.addEventListener('change', (e) => {
-                    const settings = DB.getSetting();
-                    settings.whatsappEnabled = e.target.checked;
-                    DB.saveSetting(settings);
-                });
-            }
-
-            // Tab switching
-            document.querySelectorAll('.tab-button').forEach(btn => {
-                btn.addEventListener('click', () => {
-                    document.querySelectorAll('.tab-button').forEach(b => b.classList.remove('active'));
-                    document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
-                    btn.classList.add('active');
-                    const tabId = btn.dataset.tab + 'Tab';
-                    document.getElementById(tabId).classList.add('active');
-                    if (btn.dataset.tab === 'email') displayApiStatus();
-                });
-            });
 
