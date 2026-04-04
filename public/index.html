@@ -2118,6 +2118,13 @@
                     <h1>Reports</h1>
                 </div>
                 <div class="page-content">
+                    <div class="instruction-banner" id="reportsInstruction">
+                        <div class="instruction-banner-text">View monthly revenue by property and payout summaries per landlord. Export to CSV or send payouts via WhatsApp.</div>
+                        <div class="instruction-banner-buttons">
+                            <button class="btn-small" onclick="app.dismissInstruction('reports')">Got it</button>
+                            <button class="btn-icon btn-small" onclick="app.showInstruction('reports')">?</button>
+                        </div>
+                    </div>
                     <div class="form-group" style="max-width:200px;">
                         <label>Month</label>
                         <input type="month" id="reportMonth" value="">
@@ -2785,7 +2792,7 @@
                 const out = {};
                 for (const [k, v] of Object.entries(obj)) {
                     const ck = k.replace(/_([a-z])/g, (_, c) => c.toUpperCase());
-                    out[ck] = v;
+                    out[ck] = (v !== null && typeof v === 'object' && !Array.isArray(v)) ? this._toCamel(v) : v;
                 }
                 return out;
             },
@@ -2874,8 +2881,14 @@
             _toSnake(obj) {
                 const out = {};
                 for (const [k, v] of Object.entries(obj)) {
-                    const sk = k.replace(/([A-Z])/g, '_$1').toLowerCase();
-                    out[sk] = v;
+                    if (v !== null && typeof v === 'object' && !Array.isArray(v) && !(v instanceof Date)) {
+                        // Flatten nested objects (e.g., address: {street, city} → street, city)
+                        const nested = this._toSnake(v);
+                        Object.assign(out, nested);
+                    } else {
+                        const sk = k.replace(/([A-Z])/g, '_$1').toLowerCase();
+                        out[sk] = v;
+                    }
                 }
                 return out;
             },
@@ -3345,21 +3358,17 @@
         }
 
         function updateNotificationBadge(count) {
-            const badge = document.querySelector('.notification-badge');
+            // Remove all existing badges
+            document.querySelectorAll('.notification-badge').forEach(b => b.remove());
             if (count > 0) {
-                if (!badge) {
-                    const btn = document.querySelector('.page-header');
-                    if (btn) {
-                        const newBadge = document.createElement('div');
-                        newBadge.className = 'notification-badge';
-                        newBadge.textContent = count > 9 ? '9+' : count;
-                        btn.appendChild(newBadge);
-                    }
-                } else {
+                const dashHeader = document.querySelector('#dashboard .page-header');
+                if (dashHeader) {
+                    const badge = document.createElement('div');
+                    badge.className = 'notification-badge';
                     badge.textContent = count > 9 ? '9+' : count;
+                    dashHeader.style.position = 'relative';
+                    dashHeader.appendChild(badge);
                 }
-            } else if (badge) {
-                badge.remove();
             }
         }
 
@@ -3718,7 +3727,7 @@
                         <div class="list-item-subtitle">${escapeHtml(prop.type)} • ${prop.bedrooms}BR ${prop.bathrooms}BA</div>
                         <div style="margin-top: 8px; display: flex; gap: 8px;">
                             <span class="list-item-badge" style="background-color: ${prop.color}40; color: ${prop.color};">${UI.formatCurrency(prop.nightlyRate)}/night</span>
-                            <span class="list-item-badge badge-${prop.status.toLowerCase()}">${prop.status}</span>
+                            <span class="list-item-badge badge-${(prop.status || 'active').toLowerCase()}">${prop.status || 'Active'}</span>
                         </div>
                     </div>
                 </div>`;
@@ -4069,7 +4078,7 @@
                 const dayBookings = bookings.filter(b => {
                     if (b.status === 'Cancelled') return false;
                     if (propertyFilter && b.propertyId !== propertyFilter) return false;
-                    return dateStr >= b.checkIn && dateStr < b.checkOut;
+                    return dateStr >= (b.checkIn || b.check_in) && dateStr <= (b.checkOut || b.check_out);
                 });
 
                 if (dayBookings.length === 0 && !isToday) continue; // Skip empty days
@@ -4747,10 +4756,13 @@ ${b.notes ? 'Notes: ' + b.notes : ''}`;
                 reader.readAsText(file);
             });
 
-            document.getElementById('clearDataBtn').addEventListener('click', () => {
-                if (!confirm('Are you sure you want to delete ALL local data? This cannot be undone.')) return;
+            document.getElementById('clearDataBtn').addEventListener('click', async () => {
+                if (!confirm('Are you sure you want to delete ALL data? This cannot be undone.')) return;
                 const confirmText = prompt('Type "DELETE" to confirm:');
                 if (confirmText !== 'DELETE') return;
+                try {
+                    await fetch('/api/data/clear', { method: 'DELETE', credentials: 'include' });
+                } catch(e) {}
                 localStorage.clear();
                 location.reload();
             });
@@ -5233,10 +5245,10 @@ ${b.notes ? 'Notes: ' + b.notes : ''}`;
             if (statusContainer) {
                 const hasApiKey = settings.resendApiKey ? true : false;
                 statusContainer.innerHTML = `<div class="api-status ${hasApiKey ? 'configured' : 'not-configured'}">
-                    <svg viewBox="0 0 24 24" fill="currentColor">
-                        ${hasApiKey 
-                            ? '<path d="M20.854 5.354a1 1 0 0 0-1.414-1.414l-8.485 8.485-3.889-3.889a1 1 0 0 0-1.414 1.414l4.596 4.596a1 1 0 0 0 1.414 0l9.192-9.192z"/>' 
-                            : '<circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line>'}
+                    <svg viewBox="0 0 24 24" ${hasApiKey ? 'fill="currentColor"' : 'fill="none" stroke="currentColor" stroke-width="2"'}>
+                        ${hasApiKey
+                            ? '<path d="M20.854 5.354a1 1 0 0 0-1.414-1.414l-8.485 8.485-3.889-3.889a1 1 0 0 0-1.414 1.414l4.596 4.596a1 1 0 0 0 1.414 0l9.192-9.192z"/>'
+                            : '<circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-width="2"></circle><line x1="12" y1="8" x2="12" y2="12" stroke="currentColor" stroke-width="2"></line><line x1="12" y1="16" x2="12.01" y2="16" stroke="currentColor" stroke-width="2"></line>'}
                     </svg>
                     <span>${hasApiKey ? 'API Key Configured ✓' : 'API Key Not Configured'}</span>
                 </div>`;
