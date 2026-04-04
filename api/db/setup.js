@@ -67,7 +67,7 @@ export default async function handler(req, res) {
         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
         user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
         name TEXT NOT NULL,
-        email TEXT NOT NULL,
+        email TEXT,
         phone TEXT,
         company TEXT,
         payout_percent INTEGER DEFAULT 100,
@@ -197,16 +197,6 @@ export default async function handler(req, res) {
       )
     `;
 
-    await sql`
-      CREATE TABLE IF NOT EXISTS push_subscriptions (
-        id SERIAL PRIMARY KEY,
-        user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-        endpoint TEXT NOT NULL UNIQUE,
-        p256dh TEXT NOT NULL,
-        auth TEXT NOT NULL,
-        created_at TIMESTAMPTZ DEFAULT NOW()
-      )
-    `;
 
     // Indexes
     await sql`CREATE INDEX IF NOT EXISTS idx_properties_user ON properties(user_id)`;

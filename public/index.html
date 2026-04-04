@@ -1829,11 +1829,11 @@
                             <form id="profileForm">
                                 <div class="form-group">
                                     <label>Manager Name</label>
-                                    <input type="text" id="managerName" required>
+                                    <input type="text" id="managerName">
                                 </div>
                                 <div class="form-group">
                                     <label>Email</label>
-                                    <input type="email" id="managerEmail" required>
+                                    <input type="email" id="managerEmail">
                                 </div>
                                 <div class="form-group">
                                     <label>Phone</label>
@@ -2455,8 +2455,8 @@
                 </div>
 
                 <div class="form-group">
-                    <label>Email *</label>
-                    <input type="email" id="llEmail" required>
+                    <label>Email</label>
+                    <input type="email" id="llEmail">
                 </div>
 
                 <div class="form-group">
@@ -2743,20 +2743,66 @@
                 messageHistory: 'messages'
             },
 
+            // Convert snake_case to camelCase
+            _toCamel(obj) {
+                if (Array.isArray(obj)) return obj.map(o => this._toCamel(o));
+                if (obj === null || typeof obj !== 'object') return obj;
+                const out = {};
+                for (const [k, v] of Object.entries(obj)) {
+                    const ck = k.replace(/_([a-z])/g, (_, c) => c.toUpperCase());
+                    out[ck] = v;
+                }
+                return out;
+            },
+
+            // Convert API array to keyed object { id: record }
+            _arrayToMap(arr) {
+                const map = {};
+                if (!Array.isArray(arr)) return map;
+                arr.forEach(item => {
+                    const camel = this._toCamel(item);
+                    if (camel.id) map[camel.id] = camel;
+                });
+                return map;
+            },
+
             async init() {
                 try {
                     const res = await fetch('/api/data/all', { credentials: 'include' });
                     if (res.ok) {
                         const data = await res.json();
-                        this._cache = data;
-                        // Write to localStorage as backup
-                        for (const key of Object.keys(data)) {
-                            if (key !== 'settings') {
-                                localStorage.setItem(key, JSON.stringify(data[key]));
-                            } else {
-                                localStorage.setItem('settings', JSON.stringify(data.settings));
+                        // Map API arrays to keyed objects with camelCase keys
+                        this._cache.properties = this._arrayToMap(data.properties);
+                        // Reconstruct address objects for frontend compatibility
+                        Object.values(this._cache.properties).forEach(p => {
+                            if (!p.address) {
+                                p.address = { street: p.street || '', city: p.city || '', state: p.state || '', zip: p.zip || '' };
                             }
+                        });
+                        this._cache.landlords = this._arrayToMap(data.landlords);
+                        this._cache.bookings = this._arrayToMap(data.bookings);
+                        this._cache.staysync_guests = this._arrayToMap(data.guests);
+                        this._cache.activity = this._arrayToMap(data.activity);
+                        this._cache.messageHistory = this._arrayToMap(data.messages);
+                        this._cache.settings = data.settings ? this._toCamel(data.settings) : {};
+                        // Handle property_landlords for property->landlord mapping
+                        if (data.propertyLandlords) {
+                            const plMap = {};
+                            data.propertyLandlords.forEach(pl => {
+                                const pid = pl.property_id;
+                                if (!plMap[pid]) plMap[pid] = [];
+                                plMap[pid].push(pl.landlord_id);
+                            });
+                            // Merge landlordIds into properties
+                            Object.values(this._cache.properties).forEach(p => {
+                                p.landlordIds = plMap[p.id] || [];
+                            });
                         }
+                        // Write to localStorage as backup
+                        for (const key of ['properties', 'landlords', 'bookings', 'staysync_guests', 'activity', 'messageHistory']) {
+                            localStorage.setItem(key, JSON.stringify(this._cache[key]));
+                        }
+                        localStorage.setItem('settings', JSON.stringify(this._cache.settings));
                     } else {
                         this._loadFromLocalStorage();
                     }
@@ -2789,6 +2835,16 @@
                 return this.getAll(key)[id];
             },
 
+            // Convert camelCase to snake_case for API
+            _toSnake(obj) {
+                const out = {};
+                for (const [k, v] of Object.entries(obj)) {
+                    const sk = k.replace(/([A-Z])/g, '_$1').toLowerCase();
+                    out[sk] = v;
+                }
+                return out;
+            },
+
             save(key, id, data) {
                 if (!this._cache[key]) this._cache[key] = {};
                 const record = { ...data, id, updatedAt: new Date().toISOString() };
@@ -2802,11 +2858,12 @@
                 if (apiKey) {
                     const url = isNew ? `/api/${apiKey}` : `/api/${apiKey}/${id}`;
                     const method = isNew ? 'POST' : 'PUT';
+                    const payload = this._toSnake(record);
                     fetch(url, {
                         method,
                         headers: { 'Content-Type': 'application/json' },
                         credentials: 'include',
-                        body: JSON.stringify(record)
+                        body: JSON.stringify(payload)
                     }).catch(() => {
                         UI.toast('Failed to sync to server. Changes saved locally.', 'error');
                     });
@@ -3195,21 +3252,6 @@
             renderReminders();
             // Update every minute
             setInterval(renderReminders, 60000);
-            
-            // Request notification permission
-            if ('Notification' in window && Notification.permission === 'default') {
-                Notification.requestPermission();
-            }
-        }
-
-        function sendBrowserNotification(title, options = {}) {
-            if ('Notification' in window && Notification.permission === 'granted') {
-                new Notification(title, {
-                    icon: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 180"><circle cx="90" cy="90" r="85" fill="%231e40af"/><text x="90" y="110" font-size="60" fill="white" text-anchor="middle" font-weight="bold">P</text></svg>',
-                    badge: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 180"><circle cx="90" cy="90" r="85" fill="%231e40af"/></svg>',
-                    ...options
-                });
-            }
         }
 
         async function initAuth() {
