@@ -2328,6 +2328,7 @@
                 <div class="button-group">
                     <button type="submit" class="btn-primary">Save Property</button>
                     <button type="button" class="btn-secondary" data-modal="propertyModal">Cancel</button>
+                    <button type="button" class="btn-danger btn-small" id="deletePropertyBtn" style="display:none;" onclick="deleteProperty()">Delete</button>
 <input type="hidden" id="propertyImageData">
                                 </div>
             </form>
@@ -2378,6 +2379,7 @@
                 <div class="button-group">
                     <button type="submit" class="btn-primary">Save Landlord</button>
                     <button type="button" class="btn-secondary" data-modal="landlordModal">Cancel</button>
+                    <button type="button" class="btn-danger btn-small" id="deleteLandlordBtn" style="display:none;" onclick="deleteLandlord()">Delete</button>
                 </div>
             </form>
         </div>
@@ -2414,7 +2416,8 @@
 
                 <div class="form-group">
                     <label>Guest Name *</label>
-                    <input type="text" id="bookingGuestName" required>
+                    <input type="text" id="bookingGuestName" required list="guestNameList" autocomplete="off">
+                    <datalist id="guestNameList"></datalist>
                 </div>
 
                 <div class="form-group">
@@ -2519,6 +2522,7 @@
                 <div class="button-group">
                     <button type="submit" class="btn-primary">Save Booking</button>
                     <button type="button" class="btn-secondary" data-modal="bookingModal">Cancel</button>
+                    <button type="button" class="btn-danger btn-small" id="deleteBookingBtn" style="display:none;" onclick="deleteBooking()">Delete</button>
                 </div>
             </form>
         </div>
@@ -2815,7 +2819,7 @@
                         </div>
                     </div>
                     <div class="guest-actions">
-                        ${guest.phone ? '<a href="https://wa.me/' + guest.phone.replace(/[^0-9]/g, '') + '?text=Hello%20' + encodeURIComponent(guest.name) + '" target="_blank" class="btn-icon" title="WhatsApp"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.67-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.076 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421-7.403h-.004a9.87 9.87 0 00-5.031 1.378c-3.055 2.364-3.905 6.75-1.907 10.93 1.9 3.968 6.287 5.556 10.254 3.656 3.968-1.9 5.556-6.287 3.656-10.254-1.9-3.968-6.287-5.556-10.254-3.656l.004.001z"></path></svg></a>' : ''}
+                        ${(guest.phone && DB.getSetting().whatsappEnabled) ? '<a href="https://wa.me/' + guest.phone.replace(/[^0-9]/g, '') + '?text=Hello%20' + encodeURIComponent(guest.name) + '" target="_blank" class="btn-icon" title="WhatsApp"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.67-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.076 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421-7.403h-.004a9.87 9.87 0 00-5.031 1.378c-3.055 2.364-3.905 6.75-1.907 10.93 1.9 3.968 6.287 5.556 10.254 3.656 3.968-1.9 5.556-6.287 3.656-10.254-1.9-3.968-6.287-5.556-10.254-3.656l.004.001z"></path></svg></a>' : ''}
                         ${guest.email ? '<a href="mailto:' + guest.email + '" class="btn-icon" title="Email"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22 6 12 13 2 6"></polyline></svg></a>' : ''}
                         ${guest.phone ? '<a href="tel:' + guest.phone + '" class="btn-icon" title="Call"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg></a>' : ''}
                         <button class="btn-icon" onclick="deleteGuest('${guest.id}', event)" title="Delete"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg></button>
@@ -3119,19 +3123,27 @@
             }
 
             const daysInMonth = new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0).getDate();
-            const occupiedDays = new Set(bookings.filter(b => b.status !== 'Cancelled').flatMap(b => {
-                const days = [];
-                const start = new Date(b.checkIn);
-                const end = new Date(b.checkOut);
-                for (let d = new Date(start); d < end; d.setDate(d.getDate() + 1)) {
-                    if (d.getMonth() === new Date().getMonth()) {
-                        days.push(d.getDate());
-                    }
-                }
-                return days;
-            })).size;
+            const activeProperties = properties.filter(p => p.status === 'Active');
+            const totalSlots = activeProperties.length * daysInMonth;
+            let occupiedSlots = 0;
+            if (totalSlots > 0) {
+                activeProperties.forEach(prop => {
+                    const propBookings = bookings.filter(b => b.propertyId === prop.id && b.status !== 'Cancelled');
+                    const bookedDays = new Set();
+                    propBookings.forEach(b => {
+                        const start = new Date(b.checkIn);
+                        const end = new Date(b.checkOut);
+                        for (let d = new Date(start); d < end; d.setDate(d.getDate() + 1)) {
+                            if (d.getMonth() === new Date().getMonth() && d.getFullYear() === new Date().getFullYear()) {
+                                bookedDays.add(d.getDate());
+                            }
+                        }
+                    });
+                    occupiedSlots += bookedDays.size;
+                });
+            }
 
-            const occupancy = Math.round((occupiedDays / daysInMonth) * 100);
+            const occupancy = totalSlots > 0 ? Math.round((occupiedSlots / totalSlots) * 100) : 0;
             document.getElementById('occupancyFill').style.width = occupancy + '%';
             document.getElementById('occupancyLabel').textContent = occupancy + '%';
         }
@@ -3142,6 +3154,7 @@
                 document.getElementById('propertyModalTitle').textContent = 'Add Property';
                 document.getElementById('propertyForm').reset();
                 document.getElementById('propertyForm').dataset.id = '';
+                document.getElementById('deletePropertyBtn').style.display = 'none';
                 renderLandlordCheckboxes();
                 UI.showModal('propertyModal');
             });
@@ -3241,6 +3254,7 @@
                     document.getElementById('propCheckOut').value = prop.checkOutTime;
                     document.getElementById('propNotes').value = prop.notes;
                     document.getElementById('propertyForm').dataset.id = id;
+                    document.getElementById('deletePropertyBtn').style.display = 'flex';
                     document.getElementById('propertyImageData').value = prop.image || '';
                     const imgPreview = document.getElementById('propertyImagePreview');
                     if (prop.image) {
@@ -3271,6 +3285,7 @@
                 document.getElementById('landlordModalTitle').textContent = 'Add Landlord';
                 document.getElementById('landlordForm').reset();
                 document.getElementById('landlordForm').dataset.id = '';
+                document.getElementById('deleteLandlordBtn').style.display = 'none';
                 UI.showModal('landlordModal');
             });
 
@@ -3336,6 +3351,7 @@
                     document.getElementById('llPayoutPercent').value = ll.payoutPercent;
                     document.getElementById('llNotes').value = ll.notes;
                     document.getElementById('landlordForm').dataset.id = id;
+                    document.getElementById('deleteLandlordBtn').style.display = 'flex';
                     UI.showModal('landlordModal');
                 });
             });
@@ -3359,6 +3375,7 @@
                 document.getElementById('bookingModalTitle').textContent = 'Add Booking';
                 document.getElementById('bookingForm').reset();
                 document.getElementById('bookingForm').dataset.id = '';
+                document.getElementById('deleteBookingBtn').style.display = 'none';
                 const today = new Date().toISOString().split('T')[0];
                 document.getElementById('bookingCheckIn').value = today;
                 document.getElementById('bookingCheckOut').value = today;
@@ -3473,6 +3490,24 @@
             document.getElementById('bookingServiceFee').addEventListener('change', updateBookingCalculations);
             document.getElementById('bookingTaxAmount').addEventListener('change', updateBookingCalculations);
 
+            // Guest name autocomplete from guest profiles
+            const guestNameInput = document.getElementById('bookingGuestName');
+            guestNameInput.addEventListener('input', () => {
+                const guests = DB.getList('staysync_guests');
+                const datalist = document.getElementById('guestNameList');
+                datalist.innerHTML = guests.map(g => '<option value="' + (g.name || '') + '">').join('');
+            });
+            guestNameInput.addEventListener('change', () => {
+                const guests = DB.getList('staysync_guests');
+                const match = guests.find(g => g.name === guestNameInput.value);
+                if (match) {
+                    const emailField = document.getElementById('bookingGuestEmail');
+                    const phoneField = document.getElementById('bookingGuestPhone');
+                    if (!emailField.value && match.email) emailField.value = match.email;
+                    if (!phoneField.value && match.phone) phoneField.value = match.phone;
+                }
+            });
+
             document.getElementById('bookingForm').addEventListener('submit', (e) => {
                 e.preventDefault();
                 const id = document.getElementById('bookingForm').dataset.id || crypto.randomUUID();
@@ -3522,6 +3557,7 @@
                 }
 
                 UI.hideModal('bookingModal');
+                UI.toast(isNew ? 'Booking created' : 'Booking updated', 'success');
                 renderCalendar();
                 renderDashboard();
             });
@@ -3745,6 +3781,7 @@
             document.getElementById('bookingStatus').value = booking.status;
             document.getElementById('bookingNotes').value = booking.notes;
             document.getElementById('bookingForm').dataset.id = bookingId;
+            document.getElementById('deleteBookingBtn').style.display = 'flex';
             updateBookingCalculations();
             UI.showModal('bookingModal');
         }
@@ -3808,7 +3845,9 @@
                     properties: DB.getAll('properties'),
                     landlords: DB.getAll('landlords'),
                     bookings: DB.getAll('bookings'),
+                    guests: DB.getAll('staysync_guests'),
                     activity: DB.getAll('activity'),
+                    messageHistory: DB.getAll('messageHistory'),
                     settings: DB.getSetting()
                 };
                 const json = JSON.stringify(data, null, 2);
@@ -3831,7 +3870,9 @@
                         if (data.properties) localStorage.setItem('properties', JSON.stringify(data.properties));
                         if (data.landlords) localStorage.setItem('landlords', JSON.stringify(data.landlords));
                         if (data.bookings) localStorage.setItem('bookings', JSON.stringify(data.bookings));
+                        if (data.guests) localStorage.setItem('staysync_guests', JSON.stringify(data.guests));
                         if (data.activity) localStorage.setItem('activity', JSON.stringify(data.activity));
+                        if (data.messageHistory) localStorage.setItem('messageHistory', JSON.stringify(data.messageHistory));
                         alert('Data imported successfully');
                         location.reload();
                     } catch (err) {
@@ -4077,6 +4118,38 @@
             UI.showModal('guestModal');
         }
 
+        // Delete handlers
+        function deleteProperty() {
+            const id = document.getElementById('propertyForm').dataset.id;
+            if (!id || !confirm('Delete this property? This cannot be undone.')) return;
+            DB.delete('properties', id);
+            UI.hideModal('propertyModal');
+            renderProperties();
+            renderDashboard();
+            ActivityLog.add('Property', 'Property deleted', id);
+        }
+
+        function deleteLandlord() {
+            const id = document.getElementById('landlordForm').dataset.id;
+            if (!id || !confirm('Delete this landlord? This cannot be undone.')) return;
+            DB.delete('landlords', id);
+            UI.hideModal('landlordModal');
+            renderLandlords();
+            renderDashboard();
+            ActivityLog.add('Landlord', 'Landlord deleted', id);
+        }
+
+        function deleteBooking() {
+            const id = document.getElementById('bookingForm').dataset.id;
+            if (!id || !confirm('Delete this booking? This cannot be undone.')) return;
+            DB.delete('bookings', id);
+            UI.hideModal('bookingModal');
+            renderCalendar();
+            renderDashboard();
+            renderReminders();
+            ActivityLog.add('Booking', 'Booking deleted', id);
+        }
+
         // FAB visibility
         function updateFabVisibility() {
             const currentPage = document.querySelector('.page.active');
@@ -4233,11 +4306,12 @@
             const subject = document.getElementById('msgSubject').value;
             const body = document.getElementById('msgBody').value;
             
+            const yr = new Date().getFullYear();
             const sampleData = {
                 guest_name: 'John Doe',
                 property_name: 'Ocean View Apartment',
-                check_in: '2024-05-01',
-                check_out: '2024-05-05',
+                check_in: yr + '-05-01',
+                check_out: yr + '-05-05',
                 total: '500,000',
                 payout: '450,000',
                 landlord_name: 'Property Owner'
@@ -4247,8 +4321,9 @@
             let previewBody = body;
             
             Object.keys(sampleData).forEach(key => {
-                previewSubject = previewSubject.replace(`{{${key}}}`, sampleData[key]);
-                previewBody = previewBody.replace(`{{${key}}}`, sampleData[key]);
+                const regex = new RegExp('\\{\\{' + key + '\\}\\}', 'g');
+                previewSubject = previewSubject.replace(regex, sampleData[key]);
+                previewBody = previewBody.replace(regex, sampleData[key]);
             });
             
             const preview = `
@@ -4280,8 +4355,12 @@
                     if (template) {
                         document.getElementById('msgSubject').value = template.subject;
                         document.getElementById('msgBody').value = template.body;
-                        document.getElementById('templatePreviewArea').innerHTML = '';
+                    } else {
+                        // Custom — clear fields for manual entry
+                        document.getElementById('msgSubject').value = '';
+                        document.getElementById('msgBody').value = '';
                     }
+                    document.getElementById('templatePreviewArea').innerHTML = '';
                 });
                 
                 // Load default template
