@@ -1593,6 +1593,10 @@
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M12 1v6m0 6v6M4.22 4.22l4.24 4.24m6.08 0l4.24-4.24M1 12h6m6 0h6m-1.78 7.78l-4.24-4.24m-6.08 0l-4.24 4.24"></path></svg>
                     Settings
                 </button>
+                <button data-page="help">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+                    Help
+                </button>
             </nav>
             <div style="margin-top:auto;padding-top:20px;border-top:1px solid var(--border);">
                 <button id="sidebarLogoutBtn" style="width:100%;background:none;color:var(--text-secondary);justify-content:flex-start;gap:12px;font-size:14px;">
@@ -1615,7 +1619,7 @@
                 <div class="page-content">
                     <!-- TODAY'S ACTIVITY -->
                     <div class="instruction-banner" id="dashboardInstruction">
-                        <div class="instruction-banner-text">Welcome to Phiyalistings! This is your command center. You'll see today's check-ins/outs, upcoming bookings, and key stats. Start by adding your properties and landlords using the tabs below.</div>
+                        <div class="instruction-banner-text">Welcome to Phiyalistings! This is your command center. Today's check-ins and check-outs appear here with one-tap action buttons. Scroll down for revenue charts and upcoming events. Start by adding properties and landlords using the tabs below.</div>
                         <div class="instruction-banner-buttons">
                             <button class="btn-small" onclick="app.dismissInstruction('dashboard')">Got it</button>
                             <button class="btn-icon btn-small" onclick="app.showInstruction('dashboard')">?</button>
@@ -1693,7 +1697,7 @@
                 </div>
                 <div class="page-content">
                     <div class="instruction-banner" id="calendarInstruction">
-                        <div class="instruction-banner-text">Tap any date to see bookings or create a new one. Colored bars represent different properties. Use the filter to view a specific property. Swipe left/right to change months.</div>
+                        <div class="instruction-banner-text">Tap any date to start a booking — tap check-in, then check-out. Switch between Grid, List, and Timeline views using the toggle above. Use Search to find any booking, or tap Available to see which properties are free. Swipe left/right on mobile to change months.</div>
                         <div class="instruction-banner-buttons">
                             <button class="btn-small" onclick="app.dismissInstruction('calendar')">Got it</button>
                             <button class="btn-icon btn-small" onclick="app.showInstruction('calendar')">?</button>
@@ -1758,7 +1762,7 @@
                 </div>
                 <div class="page-content">
                     <div class="instruction-banner" id="propertiesInstruction">
-                        <div class="instruction-banner-text">Add all the properties you manage here. Each property can be assigned to one or more landlords who will receive booking notifications. Tap the + button to add your first property.</div>
+                        <div class="instruction-banner-text">Add all the properties you manage here. Set the nightly rate, cleaning fee, and assign landlords. Upload a photo for each property. Use the filter buttons to view by status. Tap any property to edit or delete it.</div>
                         <div class="instruction-banner-buttons">
                             <button class="btn-small" onclick="app.dismissInstruction('properties')">Got it</button>
                             <button class="btn-icon btn-small" onclick="app.showInstruction('properties')">?</button>
@@ -1791,7 +1795,7 @@
                 </div>
                 <div class="page-content">
                     <div class="instruction-banner" id="landlordsInstruction">
-                        <div class="instruction-banner-text">Add the property owners you work with. Each landlord needs a name and email address for notifications. Their payout percentage determines how much of each booking's revenue goes to them.</div>
+                        <div class="instruction-banner-text">Add the property owners you work with. Set their payout percentage to calculate how revenue is split. Generate a Portal Link to give landlords read-only access to their bookings and payouts — they can view everything without logging in.</div>
                         <div class="instruction-banner-buttons">
                             <button class="btn-small" onclick="app.dismissInstruction('landlords')">Got it</button>
                             <button class="btn-icon btn-small" onclick="app.showInstruction('landlords')">?</button>
@@ -1820,7 +1824,7 @@
                 </div>
                 <div class="page-content">
                     <div class="instruction-banner" id="guestsInstruction">
-                        <div class="instruction-banner-text">Manage your guest profiles here. Track booking history, add notes, and contact guests directly via WhatsApp or email. Repeat guests are automatically highlighted.</div>
+                        <div class="instruction-banner-text">Guest profiles are auto-created when you save bookings. Rate guests with stars, mark favorites, or flag problematic ones. Use the Rebook button to quickly create a new booking with a returning guest's details. Filter by Repeat, Flagged, or Favorites.</div>
                         <div class="instruction-banner-buttons">
                             <button class="btn-small" onclick="app.dismissInstruction('guests')">Got it</button>
                             <button class="btn-icon btn-small" onclick="app.showInstruction('guests')">?</button>
@@ -1849,7 +1853,7 @@
                 </div>
                 <div class="page-content">
                     <div class="instruction-banner" id="settingsInstruction">
-                        <div class="instruction-banner-text">Configure your profile, email notifications (Resend API), WhatsApp messaging, default check-in/out times, and currency. You can also export/import your data for backup.</div>
+                        <div class="instruction-banner-text">Configure your profile, email notifications (Resend API), WhatsApp messaging, currency, theme, and team members. Use the Data tab to export/import your data for backup. Need help? Tap the Help & Guide button below.</div>
                         <div class="instruction-banner-buttons">
                             <button class="btn-small" onclick="app.dismissInstruction('settings')">Got it</button>
                             <button class="btn-icon btn-small" onclick="app.showInstruction('settings')">?</button>
@@ -1999,6 +2003,10 @@
                                     Clear All Data
                                 </button>
                             </div>
+                            <button class="btn-secondary" id="openHelpBtn" onclick="UI.showPage('help')" style="width:100%;margin-top:12px;">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+                                Help & Guide
+                            </button>
                         </div>
                     </div>
 
@@ -2052,7 +2060,7 @@
                 </div>
                 <div class="page-content">
                     <div class="instruction-banner" id="messagesInstruction">
-                        <div class="instruction-banner-text">Send and manage communications with your landlords. Use preset templates for common messages or create custom ones. All sent messages are logged in your history.</div>
+                        <div class="instruction-banner-text">Send and manage communications with your landlords. Choose a preset template or write a custom message. Use placeholders like {{guest_name}} and {{property_name}} — they'll be replaced with real data. Click Preview to check your message before sending.</div>
                         <div class="instruction-banner-buttons">
                             <button class="btn-small" onclick="app.dismissInstruction('messages')">Got it</button>
                             <button class="btn-icon btn-small" onclick="app.showInstruction('messages')">?</button>
@@ -2140,7 +2148,7 @@
                 </div>
                 <div class="page-content">
                     <div class="instruction-banner" id="reportsInstruction">
-                        <div class="instruction-banner-text">View monthly revenue by property and payout summaries per landlord. Export to CSV or send payouts via WhatsApp.</div>
+                        <div class="instruction-banner-text">View monthly revenue by property and payout summaries per landlord. Export data as CSV or send payout summaries directly to landlords via WhatsApp with one tap.</div>
                         <div class="instruction-banner-buttons">
                             <button class="btn-small" onclick="app.dismissInstruction('reports')">Got it</button>
                             <button class="btn-icon btn-small" onclick="app.showInstruction('reports')">?</button>
@@ -2168,6 +2176,181 @@
                     </button>
                 </div>
             </div>
+
+            <!-- HELP PAGE -->
+            <div id="help" class="page">
+                <div class="page-header">
+                    <h1>Help & Guide</h1>
+                </div>
+                <div class="page-content" style="line-height:1.7;">
+                    <div class="card">
+                        <h3 style="font-weight:700;margin-bottom:12px;color:var(--primary);">Welcome to Phiyalistings</h3>
+                        <p style="font-size:14px;color:var(--text-secondary);margin-bottom:12px;">Phiyalistings helps you manage your Airbnb properties, track bookings, communicate with landlords, and stay on top of your business. Here's how to use every feature.</p>
+                    </div>
+
+                    <div class="card">
+                        <h3 style="font-weight:700;margin-bottom:12px;">Getting Started</h3>
+                        <div style="font-size:13px;color:var(--text);">
+                            <p style="margin-bottom:8px;"><strong>1. Add your properties</strong> — Go to Properties and tap the + button. Enter the property name, type, address, number of bedrooms/bathrooms, nightly rate, and cleaning fee.</p>
+                            <p style="margin-bottom:8px;"><strong>2. Add your landlords</strong> — Go to Landlords and add the property owners. Set their payout percentage (e.g., 80% means they get 80% of revenue, you keep 20% as management fee).</p>
+                            <p style="margin-bottom:8px;"><strong>3. Link properties to landlords</strong> — When editing a property, check the boxes next to the landlords who own it.</p>
+                            <p style="margin-bottom:8px;"><strong>4. Create bookings</strong> — Go to Calendar and tap dates or use the Add Booking button. Select the property, enter guest details, and save.</p>
+                            <p><strong>5. Set up notifications</strong> — Go to Settings → Email to configure Resend API for email notifications. Enable WhatsApp in the same section for WhatsApp-based communication.</p>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <h3 style="font-weight:700;margin-bottom:12px;">Dashboard</h3>
+                        <div style="font-size:13px;">
+                            <p style="margin-bottom:8px;">Your command center. Shows at a glance:</p>
+                            <p style="margin-bottom:4px;">• <strong>Today's Activity</strong> — Check-ins and check-outs for today with one-tap status buttons. Tap "Check In" to confirm a guest's arrival or "Check Out" to complete their stay.</p>
+                            <p style="margin-bottom:4px;">• <strong>Stats Cards</strong> — Total properties, landlords, bookings this month, and revenue.</p>
+                            <p style="margin-bottom:4px;">• <strong>Occupancy Rate</strong> — Percentage of booked days across all active properties this month.</p>
+                            <p style="margin-bottom:4px;">• <strong>Revenue Chart</strong> — Line chart showing your revenue trend over the last 6 months.</p>
+                            <p style="margin-bottom:4px;">• <strong>Occupancy by Property</strong> — See which properties are performing best.</p>
+                            <p style="margin-bottom:4px;">• <strong>Upcoming Events</strong> — Check-ins, check-outs, and cleaning schedules for the next 7 days with action buttons.</p>
+                            <p>• <strong>Logout</strong> — The door icon in the top-right corner logs you out.</p>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <h3 style="font-weight:700;margin-bottom:12px;">Calendar</h3>
+                        <div style="font-size:13px;">
+                            <p style="margin-bottom:8px;">Three views to manage your schedule:</p>
+                            <p style="margin-bottom:4px;">• <strong>Grid View</strong> — Monthly calendar with colored bars showing bookings. Each color represents a different property (see the legend below the calendar). Faded bars = checked out. Solid bars = checked in.</p>
+                            <p style="margin-bottom:4px;">• <strong>List View</strong> — Day-by-day list showing only days with bookings. Great for scanning what's coming up.</p>
+                            <p style="margin-bottom:4px;">• <strong>Timeline View</strong> — Gantt-style chart with properties as rows. Best for seeing availability across multiple properties at once.</p>
+                            <p style="margin-bottom:8px;font-weight:600;">Quick Actions:</p>
+                            <p style="margin-bottom:4px;">• <strong>Tap-to-Book</strong> — Tap a date for check-in, tap another for check-out. The booking form opens pre-filled.</p>
+                            <p style="margin-bottom:4px;">• <strong>Search</strong> — Use the search bar at the top to find any booking by guest name or property.</p>
+                            <p style="margin-bottom:4px;">• <strong>Available</strong> — Check which properties are free for specific dates.</p>
+                            <p style="margin-bottom:4px;">• <strong>Templates</strong> — Save common booking setups. One tap to create similar bookings.</p>
+                            <p style="margin-bottom:4px;">• <strong>Filter</strong> — Use the property dropdown to show only one property's bookings.</p>
+                            <p style="margin-bottom:4px;">• <strong>Swipe</strong> — On mobile, swipe left/right to change months.</p>
+                            <p style="margin-bottom:4px;">• <strong>Revenue</strong> — Tap any date to see that day's total revenue.</p>
+                            <p>• <strong>Batch Actions</strong> — When viewing a date's bookings, use checkboxes to select multiple and change their status at once.</p>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <h3 style="font-weight:700;margin-bottom:12px;">Bookings</h3>
+                        <div style="font-size:13px;">
+                            <p style="margin-bottom:8px;">When creating or editing a booking:</p>
+                            <p style="margin-bottom:4px;">• <strong>Guest Name</strong> — Start typing to see suggestions from your guest database. Selecting a guest auto-fills their email and phone.</p>
+                            <p style="margin-bottom:4px;">• <strong>Custom Rate</strong> — Leave blank to use the property's default nightly rate. Enter a number to override it (a warning shows if it differs).</p>
+                            <p style="margin-bottom:4px;">• <strong>Conflict Warning</strong> — If dates overlap with another booking, the system blocks the save.</p>
+                            <p style="margin-bottom:4px;">• <strong>Notify Landlord</strong> — Check the box to send an email notification when saving.</p>
+                            <p style="margin-bottom:4px;">• <strong>Auto Guest Profile</strong> — New guests are automatically added to your guest database.</p>
+                            <p style="margin-bottom:8px;font-weight:600;">Buttons (visible when editing):</p>
+                            <p style="margin-bottom:4px;">• <strong>Receipt</strong> — Opens a printable booking receipt.</p>
+                            <p style="margin-bottom:4px;">• <strong>Guest WhatsApp</strong> — Sends check-in instructions to the guest via WhatsApp.</p>
+                            <p style="margin-bottom:4px;">• <strong>Copy</strong> — Copies booking details to your clipboard for pasting anywhere.</p>
+                            <p style="margin-bottom:4px;">• <strong>Save Template</strong> — Saves this booking's settings as a reusable template.</p>
+                            <p>• <strong>Delete</strong> — Permanently removes the booking.</p>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <h3 style="font-weight:700;margin-bottom:12px;">Properties</h3>
+                        <div style="font-size:13px;">
+                            <p style="margin-bottom:4px;">• Tap the + button or the floating button (mobile) to add a new property.</p>
+                            <p style="margin-bottom:4px;">• Each property has a name, type, address, room details, nightly rate, cleaning fee, and status (Active/Inactive/Maintenance).</p>
+                            <p style="margin-bottom:4px;">• <strong>Assign Landlords</strong> — Check the landlord boxes at the bottom of the form to link owners to the property.</p>
+                            <p style="margin-bottom:4px;">• <strong>Property Image</strong> — Upload a photo. It's stored in the cloud so it loads fast.</p>
+                            <p style="margin-bottom:4px;">• <strong>Filter</strong> — Use the All/Active/Inactive/Maintenance buttons to filter properties.</p>
+                            <p>• <strong>Delete</strong> — The red Delete button appears when editing an existing property.</p>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <h3 style="font-weight:700;margin-bottom:12px;">Landlords</h3>
+                        <div style="font-size:13px;">
+                            <p style="margin-bottom:4px;">• Add the property owners you work with. Name is required; email and phone are optional.</p>
+                            <p style="margin-bottom:4px;">• <strong>Payout Percentage</strong> — Set how much of each booking's revenue goes to them (e.g., 80% = they get 80%, you keep 20%).</p>
+                            <p style="margin-bottom:4px;">• <strong>Portal Link</strong> — When editing a landlord, click "Generate Link" to create a shareable read-only portal. Landlords can view their bookings, revenue, and payouts without logging in. Send the link via WhatsApp.</p>
+                            <p>• <strong>Delete</strong> — The red Delete button appears when editing.</p>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <h3 style="font-weight:700;margin-bottom:12px;">Guests</h3>
+                        <div style="font-size:13px;">
+                            <p style="margin-bottom:4px;">• Guest profiles are auto-created when you save a booking with a new guest name.</p>
+                            <p style="margin-bottom:4px;">• <strong>Rating</strong> — Rate guests 1-5 stars to remember good/bad experiences.</p>
+                            <p style="margin-bottom:4px;">• <strong>Favorite / Flagged</strong> — Mark guests as favorites or flag problematic ones.</p>
+                            <p style="margin-bottom:4px;">• <strong>Repeat Badge</strong> — Guests with multiple bookings get a "Repeat Guest" badge automatically.</p>
+                            <p style="margin-bottom:4px;">• <strong>Rebook</strong> — The Rebook button creates a new booking pre-filled with the guest's details from their last stay.</p>
+                            <p style="margin-bottom:4px;">• <strong>Contact</strong> — WhatsApp, email, and call buttons appear based on available contact info. WhatsApp buttons only show when enabled in Settings.</p>
+                            <p>• <strong>Filter</strong> — Filter by All, Repeat, Flagged, or Favorites.</p>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <h3 style="font-weight:700;margin-bottom:12px;">Messages</h3>
+                        <div style="font-size:13px;">
+                            <p style="margin-bottom:4px;">• <strong>Templates</strong> — Choose from pre-built templates (New Booking, Payment Reminder, Check-in, Check-out, Maintenance) or select Custom to write your own.</p>
+                            <p style="margin-bottom:4px;">• <strong>Variables</strong> — Use placeholders like {{guest_name}}, {{property_name}}, {{check_in}}, {{check_out}}, {{total}}, {{payout}}, {{landlord_name}} in your messages. They'll be replaced with real data when previewed.</p>
+                            <p style="margin-bottom:4px;">• <strong>Preview</strong> — Click Preview to see how the message will look with sample data.</p>
+                            <p style="margin-bottom:4px;">• <strong>Send To</strong> — Send to all landlords, a specific one, or the landlords linked to a specific booking.</p>
+                            <p>• <strong>History</strong> — The History tab shows all sent messages.</p>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <h3 style="font-weight:700;margin-bottom:12px;">Reports</h3>
+                        <div style="font-size:13px;">
+                            <p style="margin-bottom:4px;">• Select a month to see revenue by property and payouts by landlord.</p>
+                            <p style="margin-bottom:4px;">• <strong>Download CSV</strong> — Export the data as a spreadsheet file.</p>
+                            <p>• <strong>WhatsApp Payouts</strong> — One tap sends each landlord their payout summary via WhatsApp.</p>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <h3 style="font-weight:700;margin-bottom:12px;">Settings</h3>
+                        <div style="font-size:13px;">
+                            <p style="margin-bottom:8px;font-weight:600;">Profile Tab</p>
+                            <p style="margin-bottom:8px;">Set your manager name, email, and phone number. These appear in notifications and emails sent to landlords.</p>
+                            <p style="margin-bottom:8px;font-weight:600;">Email Tab</p>
+                            <p style="margin-bottom:4px;">• Set up Resend API for email notifications. Sign up at resend.com (free), create an API key, and paste it here.</p>
+                            <p style="margin-bottom:4px;">• Set your "From" email address and email signature.</p>
+                            <p style="margin-bottom:8px;">• Enable/disable WhatsApp notifications for bookings.</p>
+                            <p style="margin-bottom:8px;font-weight:600;">General Tab</p>
+                            <p style="margin-bottom:8px;">Set default check-in/check-out times, currency (₦ NGN, $ USD, € EUR, £ GBP), and theme (Auto/Light/Dark).</p>
+                            <p style="margin-bottom:8px;font-weight:600;">Data Tab</p>
+                            <p style="margin-bottom:4px;">• <strong>Export</strong> — Download all data as a JSON backup file.</p>
+                            <p style="margin-bottom:4px;">• <strong>Import</strong> — Restore data from a backup file.</p>
+                            <p style="margin-bottom:8px;">• <strong>Clear All Data</strong> — Permanently deletes everything (requires typing DELETE to confirm).</p>
+                            <p style="margin-bottom:8px;font-weight:600;">Team Tab</p>
+                            <p style="margin-bottom:4px;">• Invite team members by their username. They must create an account first.</p>
+                            <p style="margin-bottom:4px;">• Roles: <strong>Manager</strong> (full access), <strong>Staff</strong> (bookings & guests only), <strong>Viewer</strong> (read-only).</p>
+                            <p>• Remove members anytime from this tab.</p>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <h3 style="font-weight:700;margin-bottom:12px;">WhatsApp Integration</h3>
+                        <div style="font-size:13px;">
+                            <p style="margin-bottom:4px;">WhatsApp is the primary communication channel. Enable it in Settings → Email.</p>
+                            <p style="margin-bottom:4px;">• <strong>After saving a booking</strong> — A green WhatsApp toast appears to send booking details to the landlord.</p>
+                            <p style="margin-bottom:4px;">• <strong>Guest check-in instructions</strong> — Use the "Guest WhatsApp" button when editing a booking.</p>
+                            <p style="margin-bottom:4px;">• <strong>Monthly payouts</strong> — Use the "Send Payouts via WhatsApp" button in Reports.</p>
+                            <p>• <strong>Guest contact</strong> — WhatsApp buttons on guest cards for quick messaging.</p>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <h3 style="font-weight:700;margin-bottom:12px;">Tips & Shortcuts</h3>
+                        <div style="font-size:13px;">
+                            <p style="margin-bottom:4px;">• <strong>Install the app</strong> — When prompted, install Phiyalistings on your home screen for native app-like experience.</p>
+                            <p style="margin-bottom:4px;">• <strong>Offline mode</strong> — The app works offline. Changes sync when you're back online.</p>
+                            <p style="margin-bottom:4px;">• <strong>Data syncs across devices</strong> — Log in from any browser or phone with the same credentials. Your data is in the cloud.</p>
+                            <p style="margin-bottom:4px;">• <strong>Currency</strong> — Default is Nigerian Naira (₦). Change it in Settings → General.</p>
+                            <p>• <strong>Dark mode</strong> — Follows your device setting by default, or set it manually in Settings → General.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
         </div>
 
         <!-- FLOATING ACTION BUTTONS -->
